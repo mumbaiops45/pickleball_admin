@@ -34,6 +34,10 @@ yarn-error.log*
 .env*
 # the template carries no secrets and every clone needs it
 !.env.example
+# the production API URL is inlined into the public bundle anyway, so
+# committing it keeps deploys pointed at the live API without depending
+# on the host's dashboard being configured
+!.env.production
 
 # vercel
 .vercel
