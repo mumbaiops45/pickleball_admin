@@ -1,26 +1,430 @@
 @import "tailwindcss";
 
+/**
+ * Admin palette, borrowed from the storefront so the two apps read as one
+ * brand: ink text on paper, volt as the accent. The panel adds a dark
+ * chrome (`shell`) for the sidebar and status colours for the enum badges.
+ *
+ * The panel is light-only on purpose — an operator switching a customer's
+ * order status should see the same colours the storefront team designs against.
+ */
+@theme {
+  /* Surfaces */
+  --color-paper: #ffffff;
+  --color-surface: #f6f5ef;
+  --color-surface-2: #ecebe2;
+
+  /* Sidebar / dark chrome */
+  --color-shell: #12141a;
+  --color-shell-2: #1b1e26;
+  --color-shell-line: #2a2e38;
+
+  /* Text */
+  --color-ink: #0f1115;
+  --color-mist: #5f6672;
+  --color-faint: #8b9199;
+
+  /* Lines — line-strong clears 3:1 on every surface above (WCAG 1.4.11) */
+  --color-line: #dedcd2;
+  --color-line-strong: #7e8379;
+
+  /* Brand. volt is a FILL colour only (1.2:1 as text on paper);
+     volt-deep is the readable version for text, icons and borders. */
+  --color-volt: #d4ff3f;
+  --color-volt-deep: #4e6b00;
+
+  /* Status — each one is legible as text on paper and as ink-on-tint */
+  --color-good: #1a6b3c;
+  --color-good-tint: #e6f4ea;
+  --color-warn: #8a5a00;
+  --color-warn-tint: #fdf1dc;
+  --color-bad: #b02a0f;
+  --color-bad-tint: #fdeae5;
+  --color-info: #1d4f9c;
+  --color-info-tint: #e8effb;
+
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+}
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  color-scheme: light;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background-color: var(--color-surface);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+  background: var(--color-volt);
+  color: var(--color-ink);
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-volt-deep);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* The sidebar is dark, so its focus ring has to be the light volt instead. */
+.dark-chrome :focus-visible {
+  outline-color: var(--color-volt);
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #c9cbc2;
+  border-radius: 999px;
+  border: 3px solid transparent;
+  background-clip: padding-box;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-line-strong);
+  background-clip: padding-box;
+}
+
+/* Numbers in tables line up only if the digits are tabular. */
+.tnum {
+  font-variant-numeric: tabular-nums;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ── Pickleball scene ────────────────────────────────────────────────
+   The login brand panel is a court seen from behind the baseline: lines
+   draw themselves in, a ball rallies end to end, and the paddles swing
+   to meet it. Everything is CSS on a handful of absolutely positioned
+   boxes — no image, no canvas, no animation library — so the panel costs
+   nothing to load and stays sharp at any size.
+
+   One clock drives the whole thing:
+     0.8s  a single hop (ground → apex)
+     1.6s  a full bounce (ground → apex → ground)
+     3.2s  one traverse of the court = 2 bounces
+     6.4s  a full rally there and back = one paddle-swing cycle
+   Keep those multiples in step or the ball starts bouncing off nothing.
+
+   Geometry hangs off two variables so the ball, the paddles and the
+   contact flash always meet at the same spot: --pb-reach is how far the
+   ball travels from centre, --pb-floor is the height its bounce lands on.
+
+   `prefers-reduced-motion` already freezes every animation globally
+   further up this file, which leaves a still, legible court. */
+
+.pb-scene {
+  /* The rally has to fit the panel: the panel is ~51vw, and a paddle needs
+     ~100px of clearance past the turnaround, so half the panel minus that
+     clearance is the widest the ball can swing. Fluid rather than stepped,
+     which keeps the paddles on-panel at every width between the breakpoints. */
+  --pb-reach: clamp(120px, 25.6vw - 110px, 260px);
+  --pb-floor: 73%;
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+/* The court is laid flat with a perspective tilt so the far baseline
+   recedes; the mask fades it out before it reaches the panel edges. */
+.pb-court {
+  position: absolute;
+  /* Centred with margins rather than `translate`, and offset by half its own
+     height, so the box already straddles the floor line before any rotation.
+     `translate` would not do: it runs before `transform` but shares the same
+     origin, so the plane would end up pivoting about where it *used* to be
+     and swing off the bottom of the panel.
+
+     The explicit height matters too — without one the svg falls back to
+     150px and the tilt flattens it into an invisible sliver. */
+  left: 50%;
+  /* Narrow enough that both sidelines land inside the panel — at 118% they
+     sat off-canvas and the court lost its outline. */
+  margin-left: -47%;
+  /* Sized off the scene box rather than in pixels: the scene is now a band
+     below the copy, not the whole panel, so a fixed 470px plane hung out of
+     the band and lost its near baseline. Half the height above the floor
+     line keeps the plane centred on it at any band height. */
+  top: calc(var(--pb-floor) - 75%);
+  width: 94%;
+  height: 150%;
+  /* A shallower tilt with a nearer vanishing point: at 64deg the plane was
+     almost edge-on and the sidelines collapsed into stripes. This keeps the
+     far baseline visibly narrower than the near one. */
+  transform: perspective(620px) rotateX(56deg);
+  transform-origin: 50% 50%;
+  -webkit-mask-image: radial-gradient(ellipse 48% 60% at 50% 48%, #000 30%, transparent 100%);
+  mask-image: radial-gradient(ellipse 48% 60% at 50% 48%, #000 30%, transparent 100%);
+}
+
+/* Paths carry pathLength="1", so one dash rule draws any of them. */
+.pb-line {
+  fill: none;
+  stroke: var(--color-volt);
+  stroke-width: 2;
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  opacity: 0.5;
+  animation: pb-draw 1.6s var(--ease-out-expo) forwards;
+  animation-delay: var(--d, 0s);
+}
+
+.pb-line-soft {
+  opacity: 0.2;
+}
+
+/* The service boxes get a faint wash so the court reads as a surface
+   rather than as four loose lines. */
+.pb-deck {
+  fill: var(--color-volt);
+  opacity: 0;
+  animation: pb-deck-in 1.4s var(--ease-out-expo) 0.5s forwards;
+}
+
+.pb-net {
+  stroke: var(--color-volt);
+  stroke-width: 1.5;
+  opacity: 0;
+  animation: pb-deck-in 1s linear 1.1s forwards;
+}
+
+@keyframes pb-draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes pb-deck-in {
+  to {
+    opacity: 0.05;
+  }
+}
+
+/* ── The ball ──
+   Four nested boxes so no two animations fight over one property:
+   .pb-rally moves it across, .pb-hop lifts it, .pb-squash deforms it on
+   contact, and the glyph inside spins. */
+.pb-rally {
+  position: absolute;
+  left: 50%;
+  top: var(--pb-floor);
+  width: 0;
+  height: 0;
+  animation: pb-rally 3.2s cubic-bezier(0.42, 0, 0.58, 1) infinite alternate;
+}
+
+.pb-hop {
+  animation: pb-hop 0.8s cubic-bezier(0.32, 0, 0.6, 0.3) infinite alternate;
+}
+
+.pb-squash {
+  display: block;
+  animation: pb-squash 1.6s linear infinite;
+}
+
+.pb-ball {
+  display: block;
+  translate: -50% -50%;
+  filter: drop-shadow(0 0 22px rgb(212 255 63 / 0.45));
+  animation: pb-spin 2.4s linear infinite;
+}
+
+/* Sits on the court plane, so it tracks the ball sideways but never lifts. */
+.pb-ball-shadow {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 46px;
+  height: 12px;
+  translate: -50% -50%;
+  border-radius: 999px;
+  background: radial-gradient(ellipse at center, rgb(0 0 0 / 0.55), transparent 70%);
+  animation: pb-shadow 0.8s cubic-bezier(0.32, 0, 0.6, 0.3) infinite alternate;
+}
+
+@keyframes pb-rally {
+  from {
+    translate: calc(var(--pb-reach) * -1) 0;
+  }
+  to {
+    translate: var(--pb-reach) 0;
+  }
+}
+
+@keyframes pb-hop {
+  from {
+    translate: 0 0;
+  }
+  to {
+    translate: 0 -104px;
+  }
+}
+
+@keyframes pb-squash {
+  0% {
+    scale: 1.22 0.78;
+  }
+  10%,
+  90% {
+    scale: 1 1;
+  }
+  100% {
+    scale: 1.22 0.78;
+  }
+}
+
+@keyframes pb-spin {
+  to {
+    rotate: 360deg;
+  }
+}
+
+@keyframes pb-shadow {
+  from {
+    opacity: 0.5;
+    scale: 1 1;
+  }
+  to {
+    opacity: 0.12;
+    scale: 0.5 0.5;
+  }
+}
+
+/* ── The paddles ──
+   Anchored off centre by the same --pb-reach the ball travels, so the face
+   is waiting exactly where the ball turns around — a 58×126 svg placed so
+   its face overlaps the turn by ~14px, and its grip end sits on the floor
+   line. pb-swing peaks at 50% of its 6.4s cycle: the right paddle runs
+   unshifted (the ball reaches it at 3.2s) and the left is pulled half a
+   cycle back so the two alternate. */
+.pb-paddle {
+  position: absolute;
+  left: 50%;
+  top: var(--pb-floor);
+  margin-top: -96px;
+  transform-origin: 50% 90%;
+  animation: pb-swing 6.4s cubic-bezier(0.3, 0, 0.2, 1) infinite;
+}
+
+.pb-paddle-left {
+  margin-left: calc((var(--pb-reach) + 44px) * -1);
+  animation-delay: -3.2s;
+}
+
+.pb-paddle-right {
+  margin-left: calc(var(--pb-reach) - 14px);
+  scale: -1 1;
+}
+
+@keyframes pb-swing {
+  0%,
+  36% {
+    rotate: -14deg;
+    translate: 0 0;
+  }
+  46% {
+    rotate: -42deg;
+    translate: -8px -4px;
+  }
+  52% {
+    rotate: 24deg;
+    translate: 10px 2px;
+  }
+  64%,
+  100% {
+    rotate: -14deg;
+    translate: 0 0;
+  }
+}
+
+/* Flash of contact, centred on the turnaround and on the swing's clock. */
+.pb-hit {
+  position: absolute;
+  left: 50%;
+  top: var(--pb-floor);
+  width: 150px;
+  height: 150px;
+  translate: -50% -50%;
+  border-radius: 999px;
+  background: radial-gradient(circle, rgb(212 255 63 / 0.45), transparent 65%);
+  opacity: 0;
+  animation: pb-hit 6.4s linear infinite;
+}
+
+.pb-hit-left {
+  margin-left: calc(var(--pb-reach) * -1);
+  animation-delay: -3.2s;
+}
+
+.pb-hit-right {
+  margin-left: var(--pb-reach);
+}
+
+@keyframes pb-hit {
+  0%,
+  48% {
+    opacity: 0;
+    scale: 0.4;
+  }
+  52% {
+    opacity: 1;
+    scale: 1;
+  }
+  62%,
+  100% {
+    opacity: 0;
+    scale: 1.6;
+  }
+}
+
+/* ── Entrances ──
+   Stagger with `style={{ "--d": "120ms" }}` on the element. */
+.pb-rise {
+  opacity: 0;
+  animation: pb-rise 0.7s var(--ease-out-expo) forwards;
+  animation-delay: var(--d, 0s);
+}
+
+@keyframes pb-rise {
+  from {
+    opacity: 0;
+    translate: 0 14px;
+  }
+  to {
+    opacity: 1;
+    translate: 0 0;
+  }
+}
+
+/* A ball dropped behind the sign-in column — slow, quiet, decorative. */
+.pb-drift {
+  animation: pb-drift 7s ease-in-out infinite alternate;
+}
+
+@keyframes pb-drift {
+  from {
+    translate: 0 -10px;
+    rotate: -8deg;
+  }
+  to {
+    translate: 0 14px;
+    rotate: 8deg;
+  }
 }

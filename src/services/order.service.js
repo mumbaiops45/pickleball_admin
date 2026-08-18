@@ -1,0 +1,57 @@
+import { api, notImplemented, unwrap } from "@/lib/api";
+
+/**
+ * /api/orders — every route on the API is scoped to `req.user`, so these read
+ * the *signed-in admin's* own orders, not the store's.
+ *
+ * Reading the store's orders happens elsewhere: `GET /api/reports/orders` is
+ * admin-only and returns one row per order with the customer resolved, which
+ * is what the orders screen lists (see `report.service.js`).
+ *
+ * Writing is the part with no endpoint. Moving an order through its statuses
+ * is declared below so the screens and hooks stay wired; it rejects with a 501
+ * that <DataState> renders as an explanation rather than a crash.
+ */
+
+export async function listMyOrders(options) {
+  return unwrap(await api.get("/orders", options), []);
+}
+
+export async function getOrder(id, options) {
+  return unwrap(await api.get(`/orders/${id}`, options));
+}
+
+export async function cancelOrder(id, reason) {
+  return unwrap(await api.patch(`/orders/${id}/cancel`, { reason }));
+}
+
+export function updateOrderStatus() {
+  return notImplemented(
+    "Changing an order's status",
+    "Add PATCH /api/orders/:id/status (admin only) accepting the orderStatus enum.",
+  );
+}
+
+export function updatePaymentStatus() {
+  return notImplemented(
+    "Changing an order's payment status",
+    "Add PATCH /api/orders/:id/payment-status (admin only) accepting the paymentStatus enum.",
+  );
+}
+
+/** Colour keys consumed by <Badge>; the values mirror the Mongoose enums. */
+export const ORDER_STATUS_TONE = {
+  PENDING: "warn",
+  CONFIRMED: "info",
+  PROCESSING: "info",
+  SHIPPED: "info",
+  DELIVERED: "good",
+  CANCELLED: "bad",
+};
+
+export const PAYMENT_STATUS_TONE = {
+  PENDING: "warn",
+  PAID: "good",
+  FAILED: "bad",
+  REFUNDED: "neutral",
+};
