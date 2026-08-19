@@ -1,31 +1,31 @@
 "use client";
 
-import { useState } from "react";
+import { useId, useState } from "react";
 
 /**
- * One measure over time: filled area, 2px line, hover crosshair.
+ * One measure over time: gradient area, 2px line, hover crosshair.
  *
  * Deliberately one series per chart. Revenue and order count live on different
  * scales, and a second y-axis would let the two lines cross wherever the axes
  * happened to be scaled — so the dashboard draws them as two charts sharing an
- * x-axis instead.
+ * x-axis instead. `height="sm"` is for the secondary chart of such a pair,
+ * where the shape matters more than reading a value off the axis.
  *
- * The SVG is drawn in a fixed 720×240 user-space box and scaled by CSS, so the
+ * The SVG is drawn in a fixed 720-wide user-space box and scaled by CSS, so the
  * geometry never has to be measured in JavaScript. Strokes carry
  * `vector-effect="non-scaling-stroke"` so a wide container does not fatten the
  * line, and the readout is HTML above the SVG rather than <text> inside it, so
- * it stays at the page's font size at every width.
+ * it stays at the page font size at every width.
  *
  * A visually-hidden table carries the same numbers for screen readers and for
  * anyone who cannot separate the fill from the surface.
  */
 
 const W = 720;
-const H = 240;
+const HEIGHTS = { md: 240, sm: 170 };
 const PAD = { top: 14, right: 14, bottom: 26, left: 52 };
 
 const PLOT_W = W - PAD.left - PAD.right;
-const PLOT_H = H - PAD.top - PAD.bottom;
 
 /** 0 → a nice round ceiling, so the gridlines land on readable numbers. */
 function niceMax(value) {
@@ -40,28 +40,39 @@ function niceMax(value) {
 export default function TrendChart({
   points,
   label,
+  caption,
+  height = "md",
   formatValue = (value) => String(value),
   formatTick = formatValue,
 }) {
   const [hovered, setHovered] = useState(null);
+  // Two charts share this page, so the gradient needs an id that cannot collide.
+  const gradientId = useId();
+
+  const chartHeight = HEIGHTS[height] ?? HEIGHTS.md;
+  const plotHeight = chartHeight - PAD.top - PAD.bottom;
 
   const values = points.map((point) => point.value);
   const max = niceMax(Math.max(0, ...values));
-  const ticks = [0, 0.25, 0.5, 0.75, 1].map((fraction) => fraction * max);
+  // The short chart gets three gridlines rather than five: at 170 units tall
+  // the full set crowds the tick labels into each other.
+  const ticks = (height === "sm" ? [0, 0.5, 1] : [0, 0.25, 0.5, 0.75, 1]).map(
+    (fraction) => fraction * max,
+  );
 
   // A single point has no line to draw, so it is pinned to the middle.
   const x = (index) =>
     PAD.left +
     (points.length > 1 ? (index / (points.length - 1)) * PLOT_W : PLOT_W / 2);
 
-  const y = (value) => PAD.top + PLOT_H - (value / max) * PLOT_H;
+  const y = (value) => PAD.top + plotHeight - (value / max) * plotHeight;
 
   const line = points
     .map((point, index) => `${index ? "L" : "M"}${x(index)} ${y(point.value)}`)
     .join(" ");
 
-  const area = `${line} L${x(points.length - 1)} ${PAD.top + PLOT_H} L${x(0)} ${
-    PAD.top + PLOT_H
+  const area = `${line} L${x(points.length - 1)} ${PAD.top + plotHeight} L${x(0)} ${
+    PAD.top + plotHeight
   } Z`;
 
   const active = hovered === null ? null : points[hovered];
@@ -79,9 +90,17 @@ export default function TrendChart({
   return (
     <figure className="flex flex-col gap-2">
       <figcaption className="flex items-baseline justify-between gap-4">
-        <span className="text-[12px] font-medium uppercase tracking-[0.14em] text-mist">
-          {label}
+        <span className="flex items-baseline gap-2">
+          <span className="text-[11.5px] font-semibold uppercase tracking-[0.14em] text-mist">
+            {label}
+          </span>
+          {caption ? (
+            <span className="text-[12px] text-faint">{caption}</span>
+          ) : null}
         </span>
+
+        {/* The readout keeps its line whether or not a point is hovered, so the
+            chart below never shifts as the cursor enters. */}
         <span className="tnum text-[13px] text-ink">
           {active ? (
             <>
@@ -89,7 +108,7 @@ export default function TrendChart({
               {formatValue(active.value)}
             </>
           ) : (
-            <span className="text-mist">Hover for a day</span>
+            <span className="text-faint">Hover to read a point</span>
           )}
         </span>
       </figcaption>
@@ -102,11 +121,18 @@ export default function TrendChart({
         onTouchMove={onMove}
       >
         <svg
-          viewBox={`0 0 ${W} ${H}`}
+          viewBox={`0 0 ${W} ${chartHeight}`}
           className="h-auto w-full"
           role="img"
           aria-label={`${label} over ${points.length} periods`}
         >
+          <defs>
+            <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="var(--color-volt)" stopOpacity="0.55" />
+              <stop offset="100%" stopColor="var(--color-volt)" stopOpacity="0.04" />
+            </linearGradient>
+          </defs>
+
           {ticks.map((tick) => (
             <g key={tick}>
               <line
@@ -122,7 +148,7 @@ export default function TrendChart({
                 x={PAD.left - 8}
                 y={y(tick) + 4}
                 textAnchor="end"
-                className="fill-faint text-[11px]"
+                className="fill-faint"
                 style={{ fontSize: 11 }}
               >
                 {formatTick(tick)}
@@ -130,7 +156,7 @@ export default function TrendChart({
             </g>
           ))}
 
-          <path d={area} fill="var(--color-volt)" opacity="0.22" />
+          <path d={area} fill={`url(#${gradientId})`} />
           <path
             d={line}
             fill="none"
@@ -146,7 +172,7 @@ export default function TrendChart({
               <text
                 key={point.label}
                 x={x(index)}
-                y={H - 6}
+                y={chartHeight - 6}
                 textAnchor={
                   index === 0
                     ? "start"
@@ -168,7 +194,7 @@ export default function TrendChart({
                 x1={x(hovered)}
                 x2={x(hovered)}
                 y1={PAD.top}
-                y2={PAD.top + PLOT_H}
+                y2={PAD.top + plotHeight}
                 stroke="var(--color-line-strong)"
                 strokeWidth="1"
                 strokeDasharray="3 3"

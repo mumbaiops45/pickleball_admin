@@ -49,6 +49,23 @@ export const ORDER_STATUS_TONE = {
   CANCELLED: "bad",
 };
 
+/**
+ * The lifecycle, in the sequence the API moves an order through it. The
+ * Mongoose enum is an unordered set, and the aggregate that feeds the
+ * dashboard returns whatever order Mongo groups in, so the one place that
+ * draws the flow needs the sequence written down.
+ */
+export const ORDER_STATUS_FLOW = [
+  "PENDING",
+  "CONFIRMED",
+  "PROCESSING",
+  "SHIPPED",
+  "DELIVERED",
+];
+
+/** Statuses that end an order instead of advancing it. */
+export const ORDER_STATUS_EXITS = ["CANCELLED"];
+
 export const PAYMENT_STATUS_TONE = {
   PENDING: "warn",
   PAID: "good",

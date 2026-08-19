@@ -43,8 +43,12 @@
   --color-info: #1d4f9c;
   --color-info-tint: #e8effb;
 
-  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
-  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+  /* The fallbacks are not decoration: next/font cannot reach Google Fonts on
+     an offline or proxied machine, and the build only warns. These are what
+     the panel renders in when that happens. */
+  --font-sans: var(--font-jakarta-sans), "Segoe UI", ui-sans-serif, system-ui,
+    sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, "Cascadia Mono", monospace;
 }
 
 :root {

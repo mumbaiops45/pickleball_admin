@@ -31,6 +31,7 @@ import {
   LogOut,
   Mail,
   Menu,
+  Minus,
   Package,
   Pencil,
   Plus,
@@ -41,6 +42,8 @@ import {
   ShoppingCart,
   Tag,
   Trash2,
+  TrendingDown,
+  TrendingUp,
   TriangleAlert,
   Upload,
   Users,
@@ -96,4 +99,10 @@ export const TrashIcon = adapt(Trash2);
 export const RefreshIcon = adapt(RefreshCw);
 export const CheckIcon = adapt(Check);
 export const WarnIcon = adapt(TriangleAlert);
+
+/* Direction of travel on a KPI. Always shown beside a signed number, so
+   the arrow is a second reading of the sign rather than the only one. */
+export const TrendUpIcon = adapt(TrendingUp);
+export const TrendDownIcon = adapt(TrendingDown);
+export const TrendFlatIcon = adapt(Minus);
 export const SpinnerIcon = adapt(Loader2);

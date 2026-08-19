@@ -1,15 +1,27 @@
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist_Mono, Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/store/AuthProvider";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+/**
+ * Plus Jakarta Sans carries the whole panel: it is a variable face, so the
+ * one request covers every weight the UI asks for (400 body, 500/600 labels
+ * and headings) without loading a file per weight.
+ *
+ * Mono stays Geist Mono — it is only ever used for SKUs and order numbers,
+ * where an unmistakably monospaced face matters more than matching the
+ * heading font.
+ */
+const jakartaSans = Plus_Jakarta_Sans({
+  variable: "--font-jakarta-sans",
   subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  display: "swap",
 });
 
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
+  display: "swap",
 });
 
 export const metadata = {
@@ -33,7 +45,7 @@ export default function RootLayout({ children }) {
     <html
       lang="en"
       data-scroll-behavior="smooth"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${jakartaSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       {/* Extensions — Grammarly, password managers — write their own
           attributes onto <body> before React hydrates, which React reports as
