@@ -83,8 +83,8 @@ export default function CustomerForm({ customer, isSelf, onClose, onSaved }) {
       title={editing ? `Edit ${customer.name || "account"}` : "New account"}
       description={
         editing
-          ? "PUT /api/auth/users/:id"
-          : "POST /api/auth/register — the e-mail and phone are both unique."
+          ? "Change the details of this account."
+          : "Create an account. The e-mail and phone are both unique."
       }
       footer={
         <>

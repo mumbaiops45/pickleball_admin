@@ -337,7 +337,11 @@ export default function CustomersPage() {
             ? "Remove admin access?"
             : "Grant admin access?"
         }
-        description="PUT /api/auth/users/:id"
+        description={
+          pendingRole?.role === "ADMIN"
+            ? "They lose access to this panel and keep only their storefront account."
+            : "They will be able to open this panel and manage the catalogue, orders and accounts."
+        }
         footer={
           <>
             <Button tone="outline" onClick={() => setPendingRole(null)}>

@@ -194,7 +194,7 @@ export const unwrap = (envelope, fallback = null) =>
  */
 export function notImplemented(what, hint) {
   return Promise.reject(
-    new ApiError(`${what} is not available on the API yet.`, {
+    new ApiError(`${what} is not available yet.`, {
       status: 501,
       data: { hint },
     }),

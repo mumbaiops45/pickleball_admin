@@ -65,8 +65,8 @@ export default function CategoryForm({ category, onClose, onSaved }) {
       title={editing ? `Edit ${category.name}` : "New category"}
       description={
         editing
-          ? "PUT /api/categories/:id"
-          : "POST /api/categories — the name has to be unique."
+          ? "Change the details of this category."
+          : "Add a category to the storefront. The name has to be unique."
       }
       footer={
         <>

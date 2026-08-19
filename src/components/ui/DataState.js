@@ -34,7 +34,7 @@ export default function DataState({
         tone="info"
         title={error.message}
         body={error.data?.hint}
-        footnote="Everything above this point — service, hook and screen — is already wired for it."
+        footnote="This screen is ready for it and will start working as soon as it is switched on."
       />
     );
   }
@@ -44,7 +44,7 @@ export default function DataState({
       <Notice
         tone="bad"
         title={
-          error.isNetworkError ? "Cannot reach the API" : "Something went wrong"
+          error.isNetworkError ? "Cannot reach the server" : "Something went wrong"
         }
         body={error.message}
         action={

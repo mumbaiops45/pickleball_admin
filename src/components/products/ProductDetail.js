@@ -34,7 +34,7 @@ export default function ProductDetail({ product, onClose, onEdit }) {
       onClose={onClose}
       size="lg"
       title={product.name}
-      description={`GET /api/products/${product._id}`}
+      description={product.brand || undefined}
       footer={
         <>
           <Button tone="outline" onClick={onClose}>

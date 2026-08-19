@@ -28,14 +28,14 @@ export async function cancelOrder(id, reason) {
 export function updateOrderStatus() {
   return notImplemented(
     "Changing an order's status",
-    "Add PATCH /api/orders/:id/status (admin only) accepting the orderStatus enum.",
+    "Orders move through their statuses automatically for now. Cancelling an order does work, from the row menu.",
   );
 }
 
 export function updatePaymentStatus() {
   return notImplemented(
     "Changing an order's payment status",
-    "Add PATCH /api/orders/:id/payment-status (admin only) accepting the paymentStatus enum.",
+    "Payment status is set by the checkout flow and cannot be edited by hand yet.",
   );
 }
 

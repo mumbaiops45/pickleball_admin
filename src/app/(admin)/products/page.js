@@ -305,7 +305,7 @@ export default function ProductsPage() {
         open={Boolean(pendingDelete)}
         onClose={() => setPendingDelete(null)}
         title="Delete this product?"
-        description="DELETE /api/products/:id removes the record outright — there is no soft delete or undo."
+        description="The product is removed outright — there is no undo, and no way to restore it afterwards."
         footer={
           <>
             <Button tone="outline" onClick={() => setPendingDelete(null)}>

@@ -179,8 +179,8 @@ export default function ProductForm({ product, onClose, onSaved }) {
       title={editing ? `Edit ${product.name}` : "New product"}
       description={
         editing
-          ? "PUT /api/products/:id"
-          : "POST /api/products — the slug and SKU both have to be unique."
+          ? "Change the details of this product."
+          : "Add a product to the catalogue. The slug and SKU both have to be unique."
       }
       footer={
         <>

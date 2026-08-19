@@ -38,6 +38,6 @@ export const PAYMENT_TONE = {
 export function refundPayment() {
   return notImplemented(
     "Issuing a refund",
-    "Add POST /api/payments/:id/refund (admin only) setting status REFUNDED on both payment and order.",
+    "Refunds cannot be started from this panel yet. Raise it with your payment provider and the ledger will catch up.",
   );
 }
