@@ -1,10 +1,4 @@
-/**
- * One import site for the whole service layer.
- *
- * Every module here is a thin, typed-by-convention wrapper over one Express
- * router. Nothing in `services/` touches React — hooks in `hooks/` own the
- * loading and error state, components own the rendering.
- */
+
 
 export * as addressService from "@/services/address.service";
 export * as authService from "@/services/auth.service";

@@ -1,11 +1,6 @@
 import { api, unwrap } from "@/lib/api";
 
-/**
- * /api/addresses — scoped to `req.user`, so this is the signed-in admin's own
- * address book. Included for completeness: there is no route that reads a
- * customer's addresses, and the order payload embeds a copy of the shipping
- * address anyway.
- */
+
 
 export async function listAddresses(options) {
   return unwrap(await api.get("/addresses", options), []);

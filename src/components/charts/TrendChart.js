@@ -1,31 +1,22 @@
 "use client";
 
 import { useId, useState } from "react";
+import { useMediaQuery } from "@/hooks/useMediaQuery";
 
-/**
- * One measure over time: gradient area, 2px line, hover crosshair.
- *
- * Deliberately one series per chart. Revenue and order count live on different
- * scales, and a second y-axis would let the two lines cross wherever the axes
- * happened to be scaled — so the dashboard draws them as two charts sharing an
- * x-axis instead. `height="sm"` is for the secondary chart of such a pair,
- * where the shape matters more than reading a value off the axis.
- *
- * The SVG is drawn in a fixed 720-wide user-space box and scaled by CSS, so the
- * geometry never has to be measured in JavaScript. Strokes carry
- * `vector-effect="non-scaling-stroke"` so a wide container does not fatten the
- * line, and the readout is HTML above the SVG rather than <text> inside it, so
- * it stays at the page font size at every width.
- *
- * A visually-hidden table carries the same numbers for screen readers and for
- * anyone who cannot separate the fill from the surface.
- */
 
-const W = 720;
-const HEIGHTS = { md: 240, sm: 170 };
-const PAD = { top: 14, right: 14, bottom: 26, left: 52 };
+const WIDE = {
+  w: 720,
+  heights: { md: 240, sm: 170 },
+  pad: { top: 14, right: 14, bottom: 26, left: 52 },
+  font: 11,
+};
 
-const PLOT_W = W - PAD.left - PAD.right;
+const NARROW = {
+  w: 320,
+  heights: { md: 200, sm: 150 },
+  pad: { top: 10, right: 8, bottom: 24, left: 42 },
+  font: 12,
+};
 
 /** 0 → a nice round ceiling, so the gridlines land on readable numbers. */
 function niceMax(value) {
@@ -49,14 +40,18 @@ export default function TrendChart({
   // Two charts share this page, so the gradient needs an id that cannot collide.
   const gradientId = useId();
 
-  const chartHeight = HEIGHTS[height] ?? HEIGHTS.md;
+  const geometry = useMediaQuery("(max-width: 639px)") ? NARROW : WIDE;
+  const { w: W, pad: PAD, font: FONT } = geometry;
+  const PLOT_W = W - PAD.left - PAD.right;
+
+  const chartHeight = geometry.heights[height] ?? geometry.heights.md;
   const plotHeight = chartHeight - PAD.top - PAD.bottom;
 
   const values = points.map((point) => point.value);
   const max = niceMax(Math.max(0, ...values));
-  // The short chart gets three gridlines rather than five: at 170 units tall
-  // the full set crowds the tick labels into each other.
-  const ticks = (height === "sm" ? [0, 0.5, 1] : [0, 0.25, 0.5, 0.75, 1]).map(
+
+  const dense = height !== "sm" && geometry === WIDE;
+  const ticks = (dense ? [0, 0.25, 0.5, 0.75, 1] : [0, 0.5, 1]).map(
     (fraction) => fraction * max,
   );
 
@@ -77,20 +72,30 @@ export default function TrendChart({
 
   const active = hovered === null ? null : points[hovered];
 
-  // First, middle and last only — every label collides below ~8 buckets wide.
-  const labelled = new Set([0, Math.floor((points.length - 1) / 2), points.length - 1]);
+ 
+  const labelled = new Set(
+    geometry === WIDE
+      ? [0, Math.floor((points.length - 1) / 2), points.length - 1]
+      : [0, points.length - 1],
+  );
 
   const onMove = (event) => {
+
+    const clientX = event.touches?.[0]?.clientX ?? event.clientX;
+    if (!Number.isFinite(clientX)) return;
+
     const box = event.currentTarget.getBoundingClientRect();
-    const ratio = (event.clientX - box.left) / box.width;
+    if (!box.width) return;
+
+    const ratio = (clientX - box.left) / box.width;
     const index = Math.round(ratio * (points.length - 1));
     setHovered(Math.min(points.length - 1, Math.max(0, index)));
   };
 
   return (
     <figure className="flex flex-col gap-2">
-      <figcaption className="flex items-baseline justify-between gap-4">
-        <span className="flex items-baseline gap-2">
+      <figcaption className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+        <span className="flex min-w-0 items-baseline gap-2">
           <span className="text-[11.5px] font-semibold uppercase tracking-[0.14em] text-mist">
             {label}
           </span>
@@ -99,8 +104,7 @@ export default function TrendChart({
           ) : null}
         </span>
 
-        {/* The readout keeps its line whether or not a point is hovered, so the
-            chart below never shifts as the cursor enters. */}
+    
         <span className="tnum text-[13px] text-ink">
           {active ? (
             <>
@@ -113,12 +117,15 @@ export default function TrendChart({
         </span>
       </figcaption>
 
+     
       <div
-        className="relative w-full"
+        className="relative w-full touch-pan-y touch-pinch-zoom"
         onMouseMove={onMove}
         onMouseLeave={() => setHovered(null)}
         onTouchStart={onMove}
         onTouchMove={onMove}
+        onTouchEnd={() => setHovered(null)}
+        onTouchCancel={() => setHovered(null)}
       >
         <svg
           viewBox={`0 0 ${W} ${chartHeight}`}
@@ -149,7 +156,7 @@ export default function TrendChart({
                 y={y(tick) + 4}
                 textAnchor="end"
                 className="fill-faint"
-                style={{ fontSize: 11 }}
+                style={{ fontSize: FONT }}
               >
                 {formatTick(tick)}
               </text>
@@ -181,7 +188,7 @@ export default function TrendChart({
                       : "middle"
                 }
                 className="fill-faint"
-                style={{ fontSize: 11 }}
+                style={{ fontSize: FONT }}
               >
                 {point.label}
               </text>

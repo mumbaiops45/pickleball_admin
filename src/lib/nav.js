@@ -9,13 +9,7 @@ import {
   SettingsIcon,
 } from "@/components/ui/Icons";
 
-/**
- * The sidebar, in one place — <Sidebar> renders it and the topbar reads the
- * matching entry for the page title, so a new screen only has to be added here.
- *
- * `pending` marks a screen whose API endpoint does not exist yet: the link
- * still works, and the page explains what the backend needs.
- */
+
 export const NAV_SECTIONS = [
   {
     label: "Overview",
@@ -89,7 +83,6 @@ export const NAV_SECTIONS = [
 
 export const NAV_ITEMS = NAV_SECTIONS.flatMap((section) => section.items);
 
-/** Longest matching prefix, so /products/new still highlights Products. */
 export function findNavItem(pathname) {
   return NAV_ITEMS.filter(
     (item) => pathname === item.href || pathname.startsWith(`${item.href}/`),

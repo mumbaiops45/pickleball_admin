@@ -10,13 +10,6 @@ import { useCreateCategory, useUpdateCategory } from "@/hooks/useCategories";
 
 const EMPTY = { name: "", description: "", image: "", isActive: true };
 
-/**
- * Create/edit in one dialog — the four fields are the whole Category model.
- *
- * `category` decides the mode; passing `null` opens it blank. The parent
- * mounts this only while the dialog should be open, so the field state and any
- * failed-save error start clean every time instead of being reset by an effect.
- */
 export default function CategoryForm({ category, onClose, onSaved }) {
   const [form, setForm] = useState(() =>
     category

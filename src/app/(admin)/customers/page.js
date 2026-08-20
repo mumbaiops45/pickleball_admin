@@ -19,7 +19,15 @@ import {
 import Modal from "@/components/ui/Modal";
 import CustomerForm from "@/components/customers/CustomerForm";
 import PageHeader from "@/components/ui/PageHeader";
-import { Table, Td, Th, Tr } from "@/components/ui/Table";
+import {
+  Record,
+  RecordField,
+  Records,
+  TableOrCards,
+  Td,
+  Th,
+  Tr,
+} from "@/components/ui/Table";
 import {
   useBlockCustomer,
   useCustomers,
@@ -29,14 +37,7 @@ import {
 import { formatDate } from "@/lib/format";
 import { useAuth } from "@/store/AuthProvider";
 
-/**
- * Accounts and access, against `/api/auth/users`.
- *
- * Blocking is the reversible lever and it is the one surfaced inline —
- * `authMiddleware` already refuses a blocked user's token, so the effect is
- * immediate. Deleting and promoting both go through a confirmation because
- * neither can be undone from here.
- */
+
 export default function CustomersPage() {
   const { user: me } = useAuth();
   const [search, setSearch] = useState("");
@@ -56,7 +57,6 @@ export default function CustomersPage() {
   const setUserRole = useSetCustomerRole();
   const remove = useDeleteCustomer();
 
-  // The row that is mid-request, so only its own button shows a spinner.
   const [busyId, setBusyId] = useState(null);
 
   const toggleBlock = async (customer) => {
@@ -66,9 +66,7 @@ export default function CustomersPage() {
     if (result) refetch();
   };
 
-  // Optional chaining on both of these is load-bearing, not defensive: the
-  // React Compiler lifts each property path into the memo dependency check
-  // for its callback, which runs on every render — and both start as null.
+x
   const confirmRole = async () => {
     const next = pendingRole?.role === "ADMIN" ? "CUSTOMER" : "ADMIN";
     const result = await setUserRole.mutate(pendingRole?._id, next);
@@ -89,7 +87,7 @@ export default function CustomersPage() {
   return (
     <div className="flex flex-col gap-7">
       <PageHeader
-        eyebrow="Commerce"
+        // eyebrow="Commerce"
         title="Customers"
         copy="Every registered account. Blocking takes effect on the account's next request."
         action={
@@ -107,8 +105,8 @@ export default function CustomersPage() {
       <FormError error={block.error ?? setUserRole.error} />
 
       <Card padded={false}>
-        <div className="flex flex-col gap-3 border-b border-line p-4 md:flex-row md:items-end">
-          <div className="relative flex-1">
+        <div className="grid gap-3 border-b border-line p-4 sm:grid-cols-2 md:flex md:flex-row md:items-end">
+          <div className="relative sm:col-span-2 md:flex-1">
             <SearchIcon
               className="pointer-events-none absolute left-3 top-[2.85rem] size-4 -translate-y-1/2 text-faint"
               aria-hidden="true"
@@ -146,7 +144,7 @@ export default function CustomersPage() {
           </Select>
         </div>
 
-        <div className="p-5">
+        <div className="p-4 sm:p-5">
           <DataState
             loading={loading}
             error={error}
@@ -177,7 +175,112 @@ export default function CustomersPage() {
             rows={6}
           >
             <>
-              <Table>
+              <TableOrCards
+                minWidth="46rem"
+                cards={
+                  <Records>
+                    {filtered.map((customer) => {
+                      const isMe = customer._id === me?.id;
+                      const busy = busyId === customer._id;
+                      const who = customer.name || "this account";
+
+                      return (
+                        <Record
+                          key={customer._id}
+                          media={<Avatar user={customer} size="md" />}
+                          title={customer.name || "Unnamed"}
+                          subtitle={
+                            [customer.email, customer.phone]
+                              .filter(Boolean)
+                              .join(" · ") || undefined
+                          }
+                          badges={
+                            <>
+                              <Badge
+                                tone={
+                                  customer.role === "ADMIN" ? "accent" : "neutral"
+                                }
+                              >
+                                {customer.role}
+                              </Badge>
+                              <Badge
+                                tone={customer.isBlocked ? "bad" : "good"}
+                                dot
+                              >
+                                {customer.isBlocked ? "Blocked" : "Active"}
+                              </Badge>
+                            </>
+                          }
+                          actions={
+                            <>
+                              <Button
+                                tone="outline"
+                                size="sm"
+                                icon={EditIcon}
+                                aria-label={`Edit ${who}`}
+                                onClick={() => setEditing(customer)}
+                              >
+                                Edit
+                              </Button>
+                              <Button
+                                tone="outline"
+                                size="sm"
+                                icon={LockIcon}
+                                loading={busy}
+                                disabled={isMe}
+                                aria-label={`${
+                                  customer.isBlocked ? "Unblock" : "Block"
+                                } ${who}`}
+                                onClick={() => toggleBlock(customer)}
+                              >
+                                {customer.isBlocked ? "Unblock" : "Block"}
+                              </Button>
+                              <Button
+                                tone="ghost"
+                                size="sm"
+                                icon={ShieldIcon}
+                                disabled={isMe}
+                                aria-label={`Change the role of ${who}`}
+                                onClick={() => {
+                                  setUserRole.reset();
+                                  setPendingRole(customer);
+                                }}
+                              >
+                                Role
+                              </Button>
+                              <Button
+                                tone="ghost"
+                                size="sm"
+                                icon={TrashIcon}
+                                disabled={isMe}
+                                aria-label={`Delete ${who}`}
+                                onClick={() => {
+                                  remove.reset();
+                                  setPendingDelete(customer);
+                                }}
+                              >
+                                Delete
+                              </Button>
+                            </>
+                          }
+                        >
+                          <RecordField label="Last login">
+                            <span className="tnum">
+                              {formatDate(customer.lastLoginAt)}
+                            </span>
+                          </RecordField>
+
+                          {isMe ? (
+                            <RecordField label="Account">
+                              That&apos;s you
+                            </RecordField>
+                          ) : null}
+                        </Record>
+                      );
+                    })}
+                  </Records>
+                }
+              >
                 <thead>
                   <tr>
                     <Th>Customer</Th>
@@ -306,7 +409,7 @@ export default function CustomersPage() {
                     );
                   })}
                 </tbody>
-              </Table>
+              </TableOrCards>
 
               <p className="pt-4 text-[12.5px] text-mist">
                 Showing {filtered.length} of {customers.length} accounts.
@@ -316,7 +419,6 @@ export default function CustomersPage() {
         </div>
       </Card>
 
-      {/* Mounted only while open, so each visit starts from clean state. */}
       {editing !== undefined ? (
         <CustomerForm
           customer={editing}

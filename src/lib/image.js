@@ -1,21 +1,7 @@
 "use client";
 
-/**
- * Turning a picked file into something `category.image` can hold.
- *
- * The API stores images as a String and has no upload route (API-REVIEW.md
- * §5), so a file selected from disk has to travel as a `data:` URI inside the
- * JSON body. That puts a hard ceiling on it: `express.json()` defaults to a
- * 100kb limit, and the backend does not raise it — a larger body comes back as
- * a 413 before any controller runs. So the file is not merely converted, it is
- * downscaled and re-encoded until the encoded string fits a budget below that.
- *
- * The knobs are tried worst-case-last: full size at good quality first, then
- * progressively smaller and rougher. The first result under budget wins, so a
- * small clean logo keeps its detail and only a large photo gets punished.
- */
 
-/** Leaves ~30kb of the 100kb body for name, description and JSON overhead. */
+
 export const MAX_ENCODED_BYTES = 70_000;
 
 const EDGES = [512, 384, 288, 200];
@@ -23,7 +9,6 @@ const QUALITIES = [0.82, 0.7, 0.6, 0.45];
 
 export const ACCEPT = "image/png,image/jpeg,image/webp,image/svg+xml";
 
-/** Guards the decode step; the budget below is what actually matters. */
 const MAX_INPUT_BYTES = 12 * 1024 * 1024;
 
 export class ImageError extends Error {
@@ -40,7 +25,6 @@ export function formatBytes(bytes) {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-/** A data URI's cost on the wire is the string itself, not the decoded image. */
 export const encodedSize = (dataUrl) =>
   typeof dataUrl === "string" ? dataUrl.length : 0;
 
@@ -56,11 +40,7 @@ const readAsDataUrl = (blob) =>
     reader.readAsDataURL(blob);
   });
 
-/**
- * `createImageBitmap` decodes off the main thread and is what every target
- * browser uses; the `<img>` path is there for Safari versions that reject a
- * Blob argument.
- */
+
 async function decode(file) {
   if (typeof createImageBitmap === "function") {
     try {
@@ -86,12 +66,7 @@ async function decode(file) {
 const toBlob = (canvas, type, quality) =>
   new Promise((resolve) => canvas.toBlob(resolve, type, quality));
 
-/**
- * WebP is ~30% smaller than JPEG at the same quality and, unlike JPEG, keeps
- * the alpha channel a cut-out product shot needs. A browser that cannot encode
- * it returns a PNG from `toBlob` regardless of the type asked for, which is
- * why the result's own `type` is trusted over the requested one.
- */
+
 async function encode(source, edge, quality) {
   const width = source.width;
   const height = source.height;
@@ -116,10 +91,7 @@ async function encode(source, edge, quality) {
   };
 }
 
-/**
- * SVG is already small and rasterising it would throw away the only reason to
- * use it, so it skips the canvas entirely and is size-checked as-is.
- */
+
 async function passThroughSvg(file, budget) {
   const dataUrl = await readAsDataUrl(file);
 
@@ -140,16 +112,7 @@ async function passThroughSvg(file, budget) {
   };
 }
 
-/**
- * Reads a picked file and returns a `data:` URI small enough to store.
- *
- * Resolves to `{ dataUrl, width, height, type, bytes }`. Rejects with an
- * `ImageError` whose message is safe to show in the form.
- *
- * `budget` is the encoded size this one image may occupy. A product gallery
- * puts several images in a single body, so it passes what is left rather than
- * letting each image spend the whole allowance.
- */
+
 export async function fileToStorableDataUrl(
   file,
   { budget = MAX_ENCODED_BYTES } = {},
@@ -199,7 +162,6 @@ export async function fileToStorableDataUrl(
       )}). Crop it first, or host it somewhere and paste the URL instead.`,
     );
   } finally {
-    // Frees the decoded pixels immediately rather than at the next GC.
     source.close?.();
   }
 }

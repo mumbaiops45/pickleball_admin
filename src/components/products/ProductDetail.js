@@ -12,18 +12,7 @@ import {
   formatPrice,
 } from "@/lib/format";
 
-/**
- * Read-only view of one product.
- *
- * The list can only afford six columns, and the form only shows a field while
- * it is being edited — so most of what the Product model carries (the
- * merchandising fields, colourways, options, highlights, specs) had nowhere to
- * be read. This is that place. The row handed in is already the full document
- * from `GET /products`, so there is no second request.
- *
- * Sections drop out entirely when their field is empty rather than rendering an
- * empty shell, which keeps a bare draft short instead of a wall of dashes.
- */
+
 export default function ProductDetail({ product, onClose, onEdit }) {
   const off = discountPercent(product.price, product.discountPrice);
   const optionLabel = product.optionLabel || "Options";
@@ -222,7 +211,6 @@ function Facts({ children }) {
   return <dl className="grid gap-4 sm:grid-cols-2">{children}</dl>;
 }
 
-/** A labelled value; `children` wins over `value`, for badges and the like. */
 function Fact({ label, value, hint, mono, children }) {
   return (
     <div className="flex flex-col gap-1">
@@ -237,10 +225,7 @@ function Fact({ label, value, hint, mono, children }) {
   );
 }
 
-/**
- * Same constraint as the list thumbnail: an image is either a data URI written
- * by the gallery or an arbitrary remote URL, so `next/image` cannot serve it.
- */
+
 function Gallery({ images }) {
   if (!images?.length) {
     return (
@@ -276,7 +261,6 @@ function Tile({ src, index }) {
   }
 
   return (
-    // eslint-disable-next-line @next/next/no-img-element
     <img
       src={src}
       alt={index === 0 ? "Cover image" : `Image ${index + 1}`}

@@ -1,8 +1,4 @@
-/**
- * Enum pill. Tone names match the status maps in the services
- * (`ORDER_STATUS_TONE`, `PAYMENT_STATUS_TONE`) so a status never needs a
- * colour decision at the call site.
- */
+
 const TONES = {
   neutral: "bg-surface-2 text-mist",
   good: "bg-good-tint text-good",

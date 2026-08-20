@@ -1,12 +1,4 @@
-/**
- * The animated court behind the login brand panel.
- *
- * Purely decorative and purely CSS — every class here is defined in the
- * "Pickleball scene" block of `globals.css`, which also documents the shared
- * 0.8s / 1.6s / 3.2s / 6.4s timing grid the ball and paddles are locked to.
- * Nothing in here takes focus or is read out, hence the single `aria-hidden`
- * on the wrapper.
- */
+
 export default function CourtScene() {
   return (
     <div className="pb-scene" aria-hidden="true">
@@ -30,20 +22,13 @@ export default function CourtScene() {
   );
 }
 
-/**
- * Top-down court, tilted into the floor by `.pb-court`. The viewBox is in
- * plain units rather than fractions so `stroke-width` stays a sane number
- * once `preserveAspectRatio="none"` stretches the box.
- */
 function Court() {
   return (
     <svg viewBox="0 0 400 300" className="pb-court" preserveAspectRatio="none">
-      {/* Service boxes, washed in before the lines finish drawing. */}
       <rect className="pb-deck" x="24" y="18" width="352" height="104" />
       <rect className="pb-deck" x="24" y="178" width="352" height="104" />
 
-      {/* Perimeter, then kitchen lines, then the centre service lines. The
-          staggered delays make the court assemble rather than blink on. */}
+      
       <rect className="pb-line" pathLength="1" x="24" y="18" width="352" height="264" />
       <path className="pb-line" pathLength="1" d="M24 122H376" style={{ "--d": "0.25s" }} />
       <path className="pb-line" pathLength="1" d="M24 178H376" style={{ "--d": "0.25s" }} />

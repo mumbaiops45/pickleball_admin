@@ -19,20 +19,7 @@ import {
   isDataUrl,
 } from "@/lib/image";
 
-/**
- * The `images: [String]` array on a product.
- *
- * Where <ImagePicker> handles one image with the whole size allowance, a
- * gallery has to divide it: every image goes into the same request body, and
- * the API's 100kb limit applies to the body, not to each field. So the budget
- * passed to the encoder is what the *already chosen* inline images have left
- * over, and the meter below the grid shows it being spent. URLs cost only
- * their own length, which is why they stay usable once uploads are full.
- *
- * The first image is the cover — that is a storefront convention, not
- * something the schema states — so reordering is offered as "Make cover"
- * rather than drag handles, which is the only reorder anyone actually needs.
- */
+
 export default function ImageGallery({
   label = "Images",
   value = [],
@@ -60,8 +47,7 @@ export default function ImageGallery({
     setBusy(true);
     setError(null);
 
-    // Sequential, not Promise.all: each image's budget depends on what the
-    // previous one actually consumed.
+  
     const added = [];
     let left = remaining;
 
@@ -102,7 +88,7 @@ export default function ImageGallery({
 
   return (
     <div className="flex flex-col gap-2.5">
-      <div className="flex items-center justify-between gap-3">
+      <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
         <span className="text-[13px] font-medium text-ink">
           {label}
           {value.length ? (
@@ -135,7 +121,7 @@ export default function ImageGallery({
       </div>
 
       {adding ? (
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <input
             type="url"
             autoFocus
@@ -167,12 +153,13 @@ export default function ImageGallery({
             >
               <Thumb src={image} />
 
+         
               <button
                 type="button"
                 onClick={() => removeAt(index)}
                 disabled={disabled}
                 aria-label={`Remove image ${index + 1}`}
-                className="absolute right-1 top-1 grid size-6 place-items-center rounded-md bg-ink/70 text-paper opacity-0 transition-opacity hover:bg-ink focus:opacity-100 group-hover:opacity-100"
+                className="hover-reveal absolute right-1 top-1 grid size-7 place-items-center rounded-md bg-ink/75 text-paper opacity-0 transition-opacity hover:bg-ink focus:opacity-100 group-hover:opacity-100 sm:size-6"
               >
                 <CloseIcon className="size-3.5" />
               </button>
@@ -186,7 +173,7 @@ export default function ImageGallery({
                   type="button"
                   onClick={() => makeCover(index)}
                   disabled={disabled}
-                  className="absolute bottom-1 left-1 rounded bg-ink/70 px-1.5 py-0.5 text-[10.5px] font-medium text-paper opacity-0 transition-opacity hover:bg-ink focus:opacity-100 group-hover:opacity-100"
+                  className="hover-reveal absolute bottom-1 left-1 rounded bg-ink/75 px-1.5 py-1 text-[10.5px] font-medium text-paper opacity-0 transition-opacity hover:bg-ink focus:opacity-100 group-hover:opacity-100"
                 >
                   Make cover
                 </button>
@@ -227,7 +214,7 @@ export default function ImageGallery({
       />
 
       {spent > 0 ? (
-        <div className="flex items-center gap-2.5">
+        <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1">
           <span
             className="h-1 flex-1 overflow-hidden rounded-full bg-surface-2"
             role="progressbar"
@@ -243,7 +230,7 @@ export default function ImageGallery({
               style={{ width: `${used}%` }}
             />
           </span>
-          <span className="shrink-0 text-[11.5px] text-mist tnum">
+          <span className="tnum shrink-0 text-[11.5px] text-mist max-sm:w-full">
             {formatBytes(spent)} of {formatBytes(MAX_ENCODED_BYTES)} inline
           </span>
         </div>
@@ -272,8 +259,7 @@ function Thumb({ src }) {
   }
 
   return (
-    // Arbitrary remote hosts and data URIs both sit outside next/image.
-    // eslint-disable-next-line @next/next/no-img-element
+  
     <img
       src={src}
       alt=""

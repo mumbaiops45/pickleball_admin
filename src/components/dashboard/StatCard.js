@@ -2,18 +2,6 @@ import Link from "next/link";
 import { ArrowRightIcon, TrendDownIcon, TrendFlatIcon, TrendUpIcon } from "@/components/ui/Icons";
 import { formatPercent } from "@/lib/format";
 
-/**
- * One headline number, with room for the two things that make it mean
- * something: how it moved, and what share of it has landed.
- *
- * `tone` tints the icon chip only — the number itself stays ink so a row of
- * cards reads as data rather than as a row of warning lights. The one place
- * colour does carry meaning is the delta chip, and there it is paired with an
- * arrow and a signed number, so the direction survives without the hue.
- *
- * Whether a rise is good is not something the card can infer: revenue climbing
- * is good, out-of-stock lines climbing is not. `deltaGoodWhen` says which.
- */
 const TONES = {
   neutral: "bg-surface-2 text-mist",
   accent: "bg-volt/30 text-volt-deep",
@@ -73,7 +61,10 @@ export default function StatCard({
         <div className="mt-3.5 h-9 w-24 animate-pulse rounded bg-surface-2" />
       ) : (
         <div className="mt-3.5 flex flex-wrap items-end gap-x-2.5 gap-y-1.5">
-          <p className="tnum text-[2.1rem] font-semibold leading-none tracking-[-0.035em] text-ink">
+          {/* Two of these sit side by side from `sm`, so at 360px the figure
+              gets ~130px. A seven-figure revenue at 2.1rem does not fit;
+              the clamp shrinks it rather than letting it break its line. */}
+          <p className="tnum text-[clamp(1.55rem,6.2vw,2.1rem)] font-semibold leading-none tracking-[-0.035em] text-ink">
             {value}
           </p>
           {delta ? <Delta {...delta} goodWhen={deltaGoodWhen} /> : null}
@@ -81,7 +72,9 @@ export default function StatCard({
       )}
 
       {caption ? (
-        <p className="mt-2.5 text-[12.5px] leading-snug text-mist">{caption}</p>
+        <p className="mt-2.5 text-balance text-[12.5px] leading-snug text-mist">
+          {caption}
+        </p>
       ) : null}
 
       {meter && !loading ? <Meter {...meter} /> : null}
@@ -89,7 +82,7 @@ export default function StatCard({
   );
 
   const classes =
-    "group relative flex min-h-[9.5rem] flex-col rounded-xl border border-line bg-paper p-5 " +
+    "group relative flex min-h-[8.75rem] flex-col rounded-xl border border-line bg-paper p-4 sm:min-h-[9.5rem] sm:p-5 " +
     "shadow-[0_1px_2px_rgb(15_17_21/0.03)] transition-[border-color,box-shadow] duration-150";
 
   if (href) {
@@ -106,10 +99,6 @@ export default function StatCard({
   return <div className={classes}>{body}</div>;
 }
 
-/**
- * A signed percentage with an arrow. `null`/`undefined` renders nothing rather
- * than a misleading 0% — a missing comparison is not a flat one.
- */
 function Delta({ value, label, goodWhen = "up" }) {
   if (value === null || value === undefined || !Number.isFinite(Number(value))) {
     return null;
@@ -142,7 +131,7 @@ function Meter({ value, max, label, tone = "accent" }) {
   return (
     <div className="mt-auto flex flex-col gap-1.5 pt-4">
       <div className="flex items-baseline justify-between gap-2">
-        <span className="text-[11.5px] text-mist">{label}</span>
+        <span className="min-w-0 truncate text-[11.5px] text-mist">{label}</span>
         <span className="tnum text-[11.5px] font-semibold text-ink">
           {Math.round(ratio * 100)}%
         </span>

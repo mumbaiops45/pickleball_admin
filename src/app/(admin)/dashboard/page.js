@@ -25,7 +25,15 @@ import {
 } from "@/components/ui/Icons";
 import PageHeader from "@/components/ui/PageHeader";
 import SegmentedControl from "@/components/ui/SegmentedControl";
-import { Table, Td, Th, Tr } from "@/components/ui/Table";
+import {
+  Record,
+  RecordField,
+  Records,
+  TableOrCards,
+  Td,
+  Th,
+  Tr,
+} from "@/components/ui/Table";
 import {
   useDashboard,
   useLowStock,
@@ -53,26 +61,8 @@ import {
 } from "@/lib/format";
 import { useAuth } from "@/store/AuthProvider";
 
-/**
- * Everything on this screen comes from /api/dashboard, which does the
- * aggregation in Mongo — the panel formats numbers and draws them, and never
- * sums a collection in the browser.
- *
- * Each panel owns its own request, so a slow aggregation (top products across
- * every order) does not hold up the KPI row, and one failing endpoint leaves
- * the rest of the screen readable.
- *
- * Revenue excludes cancelled orders; that rule lives on the server and is
- * echoed back in `meta.revenueRule`.
- *
- * The screen is ordered by how often it is read rather than by which endpoint
- * is cheapest: the four figures an operator opens the panel for, then the
- * trend behind them, then where the orders currently sit, then the tables
- * they drill into. Panels are paired into rows so a wide screen fills across
- * instead of scrolling a single column of full-width slabs.
- */
 
-/** Short enough to sit in a card header; the full wording is the title. */
+
 const RANGE_OPTIONS = SALES_RANGES.map((option) => ({
   value: option.value,
   label: option.label.replace("Last ", "").replace(" days", "D").replace(" months", "M"),
@@ -117,9 +107,6 @@ export default function DashboardPage() {
     0,
   );
 
-  // The aggregate returns the statuses in whatever order Mongo grouped them;
-  // the pipeline has to draw them in lifecycle order, with anything the API
-  // sends that is not in the enum appended rather than dropped.
   const byStatus = new Map(orderStatusRows.map((row) => [row.status, row]));
   const toStage = (statusName) => {
     const row = byStatus.get(statusName);
@@ -144,7 +131,7 @@ export default function DashboardPage() {
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        eyebrow="Overview"
+        // eyebrow="Overview"
         title={firstName ? `Welcome back, ${firstName}` : "Welcome back"}
         copy="Revenue, orders and stock, aggregated by the API."
         action={
@@ -308,9 +295,7 @@ export default function DashboardPage() {
               />
             </div>
 
-            {/* The totals for the selected range, beside the charts on a wide
-                screen and above them on a narrow one. */}
-            <aside className="order-1 grid gap-2.5 sm:grid-cols-3 xl:order-2 xl:grid-cols-1 xl:content-start">
+            <aside className="order-1 grid grid-cols-2 gap-2.5 sm:grid-cols-3 xl:order-2 xl:grid-cols-1 xl:content-start">
               <Figure
                 label="Revenue"
                 value={formatPrice(sales.totals.revenue)}
@@ -422,7 +407,7 @@ export default function DashboardPage() {
             </Button>
           }
         >
-          <div className="p-5 pt-4">
+          <div className="p-4 pt-4 sm:p-5 sm:pt-4">
             <DataState
               loading={recentOrders.loading}
               error={recentOrders.error}
@@ -432,7 +417,54 @@ export default function DashboardPage() {
               emptyBody="The storefront has not taken an order."
               rows={5}
             >
-              <Table>
+              <TableOrCards
+                minWidth="44rem"
+                cards={
+                  <Records>
+                    {(recentOrders.data ?? []).map((order) => (
+                      <Record
+                        key={order.id}
+                        media={
+                          <Avatar
+                            user={{ name: order.customer, email: order.email }}
+                            size="md"
+                          />
+                        }
+                        title={order.customer}
+                        subtitle={`${order.orderNumber} · ${formatNumber(
+                          order.itemCount,
+                        )} ${order.itemCount === 1 ? "item" : "items"}`}
+                        badges={
+                          <>
+                            <Badge
+                              dot
+                              tone={ORDER_STATUS_TONE[order.orderStatus]}
+                            >
+                              {order.orderStatus}
+                            </Badge>
+                            <Badge
+                              tone={PAYMENT_STATUS_TONE[order.paymentStatus]}
+                            >
+                              {order.paymentStatus}
+                            </Badge>
+                          </>
+                        }
+                      >
+                        <RecordField label="Total">
+                          <span className="tnum font-medium">
+                            {formatPrice(order.totalAmount)}
+                          </span>
+                        </RecordField>
+                        <RecordField label="Placed">
+                          <span className="tnum">
+                            {formatDate(order.createdAt)}
+                          </span>
+                        </RecordField>
+                      </Record>
+                    ))}
+                  </Records>
+                }
+              >
                 <thead>
                   <tr>
                     <Th>Order</Th>
@@ -496,7 +528,7 @@ export default function DashboardPage() {
                     </Tr>
                   ))}
                 </tbody>
-              </Table>
+              </TableOrCards>
             </DataState>
           </div>
         </Card>
@@ -555,7 +587,7 @@ export default function DashboardPage() {
           subtitle="By revenue, all time"
           padded={false}
         >
-          <div className="p-5 pt-4">
+          <div className="p-4 pt-4 sm:p-5 sm:pt-4">
             <DataState
               loading={topProducts.loading}
               error={topProducts.error}
@@ -680,32 +712,56 @@ export default function DashboardPage() {
 function Figure({ label, value, emphasis = false }) {
   return (
     <div
-      className={`flex flex-col gap-1.5 rounded-lg border px-4 py-3 ${
+      className={`flex flex-col gap-1.5 rounded-lg border px-3.5 py-3 sm:px-4 ${
         emphasis
           ? "border-volt-deep/25 bg-volt/10"
           : "border-line bg-surface/60"
       }`}
     >
-      <span className="text-[11px] font-semibold uppercase tracking-[0.14em] text-mist">
+      <span className="truncate text-[11px] font-semibold uppercase tracking-[0.14em] text-mist">
         {label}
       </span>
-      <span className="tnum text-[1.3rem] font-semibold leading-none tracking-[-0.03em] text-ink">
+      <span className="tnum text-[clamp(1.05rem,4.4vw,1.3rem)] font-semibold leading-none tracking-[-0.03em] text-ink">
         {value}
       </span>
     </div>
   );
 }
 
-/**
- * Ranked products. The bar under each revenue figure is that product measured
- * against the best seller above it, so the drop-off between rank 1 and rank 6
- * is visible without reading six numbers.
- */
+
 function BestSellers({ products }) {
   const top = Math.max(0, ...products.map((product) => product.revenue || 0));
 
   return (
-    <Table className="min-w-0">
+   
+    <TableOrCards
+      minWidth="30rem"
+      cards={
+        <Records>
+          {products.map((product, index) => (
+            <Record
+              key={product.productId}
+              title={`${index + 1}. ${product.name}`}
+              subtitle={product.sku ?? undefined}
+              badges={
+                <Badge tone={stockTone(product.stock)}>
+                  {formatNumber(product.stock)}
+                </Badge>
+              }
+            >
+              <RecordField label="Units">
+                <span className="tnum">{formatNumber(product.unitsSold)}</span>
+              </RecordField>
+              <RecordField label="Revenue">
+                <span className="tnum font-medium">
+                  {formatPrice(product.revenue)}
+                </span>
+              </RecordField>
+            </Record>
+          ))}
+        </Records>
+      }
+    >
       <thead>
         <tr>
           <Th className="w-8">#</Th>
@@ -755,6 +811,6 @@ function BestSellers({ products }) {
           </Tr>
         ))}
       </tbody>
-    </Table>
+    </TableOrCards>
   );
 }

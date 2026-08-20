@@ -1,20 +1,5 @@
 "use client";
 
-/**
- * Part-to-whole for a small enum whose members each have their own status
- * colour — payment status, mainly.
- *
- * A ring is only honest when the parts really do add up to the whole and no
- * two of them share a hue. Order *status* fails the second test (CONFIRMED,
- * PROCESSING and SHIPPED are all `info`), which is why that split is drawn as
- * a pipeline instead — see <PipelineStages>.
- *
- * The ring is one <circle> per row with a dash pattern, so there is no path
- * arithmetic and no library. The legend beside it carries every label, count
- * and share in text, so the colour is a second encoding of something already
- * written down rather than the only way to read the chart.
- */
-
 const TONES = {
   accent: "var(--color-volt-deep)",
   good: "var(--color-good)",
@@ -45,10 +30,6 @@ export default function DonutChart({
     return <p className="text-[13px] text-mist">{empty}</p>;
   }
 
-  // Each arc starts where the ones before it ended. Summed per row rather
-  // than carried in a running total, because a variable reassigned inside a
-  // render is exactly what the React compiler refuses to reason about — and
-  // an enum this short makes the extra passes free.
   const segments = rows.map((row, index) => {
     const share = (row.value || 0) / total;
     const length = share * CIRCUMFERENCE;
@@ -106,8 +87,6 @@ export default function DonutChart({
           </g>
         </svg>
 
-        {/* The total, in the hole — HTML rather than <text> so it keeps the
-            page's font stack and tabular figures at any size. */}
         <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center gap-0.5">
           <span className="tnum text-[17px] font-semibold leading-none tracking-[-0.02em] text-ink">
             {centerValue ?? formatValue(total)}
@@ -120,9 +99,12 @@ export default function DonutChart({
         </div>
       </div>
 
-      <ul className="flex min-w-0 flex-1 flex-col gap-2.5">
+      <ul className="flex w-full min-w-0 flex-1 flex-col gap-2.5">
         {segments.map((segment) => (
-          <li key={segment.label} className="flex items-center gap-2.5">
+          <li
+            key={segment.label}
+            className="flex flex-wrap items-center gap-x-2.5 gap-y-0.5"
+          >
             <span
               aria-hidden="true"
               className="size-2.5 shrink-0 rounded-[3px]"
@@ -131,7 +113,7 @@ export default function DonutChart({
             <span className="min-w-0 flex-1 truncate text-[13px] text-ink">
               {segment.label}
             </span>
-            <span className="tnum shrink-0 text-right text-[13px] font-medium text-ink">
+            <span className="tnum shrink-0 text-[13px] font-medium text-ink max-sm:order-last max-sm:w-full max-sm:pl-5 sm:text-right">
               {formatValue(segment.value)}
               {segment.caption ? (
                 <span className="ml-1.5 text-[12px] font-normal text-mist">

@@ -7,22 +7,7 @@ import { PasswordInput, Select, TextInput } from "@/components/ui/Field";
 import Modal from "@/components/ui/Modal";
 import { useCreateCustomer, useUpdateCustomer } from "@/hooks/useCustomers";
 
-/**
- * Create and edit an account, against `POST /auth/register` and
- * `PUT /auth/users/:id`.
- *
- * The two modes differ in more than the verb:
- *
- * - A password can only be *set*, never changed. `register` requires one and
- *   no route updates it, so the field appears on create and is absent on edit
- *   rather than sitting there doing nothing.
- * - Blocking is a state an existing account is in, so it belongs on the edit
- *   form only — a brand new account is never created blocked.
- *
- * E-mail and phone are both optional individually, but the API needs at least
- * one of them: it is how the account signs in. That rule is checked here so
- * the operator sees it against the fields rather than as a 400.
- */
+
 export default function CustomerForm({ customer, isSelf, onClose, onSaved }) {
   const editing = Boolean(customer);
 
@@ -65,9 +50,6 @@ export default function CustomerForm({ customer, isSelf, onClose, onSaved }) {
     const saved = editing
       ? await update.mutate(customer._id, {
           ...payload,
-          // Nothing on the server stops an admin demoting themselves — it
-          // would simply lock them out of this panel on the next sign-in — so
-          // the field is disabled and the key is left off the request.
           ...(isSelf ? { role: undefined } : null),
           isBlocked: form.isBlocked,
         })

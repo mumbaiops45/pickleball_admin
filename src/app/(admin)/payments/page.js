@@ -8,7 +8,15 @@ import DataState, { FormError } from "@/components/ui/DataState";
 import { Select, TextInput } from "@/components/ui/Field";
 import { DownloadIcon, RefreshIcon } from "@/components/ui/Icons";
 import PageHeader from "@/components/ui/PageHeader";
-import { Table, Td, Th, Tr } from "@/components/ui/Table";
+import {
+  Record,
+  RecordField,
+  Records,
+  TableOrCards,
+  Td,
+  Th,
+  Tr,
+} from "@/components/ui/Table";
 import { useReport, useReportDownload } from "@/hooks/useReports";
 import { PAYMENT_TONE } from "@/services/payment.service";
 import { defaultRange } from "@/services/report.service";
@@ -17,17 +25,7 @@ import { formatDateTime, formatNumber, formatPrice } from "@/lib/format";
 const STATUSES = ["PENDING", "SUCCESS", "FAILED", "REFUNDED"];
 const METHODS = ["COD", "ONLINE"];
 
-/**
- * The payment ledger, read from `GET /api/reports/payments`.
- *
- * The `/api/payments` router only carries the three checkout calls a shopper
- * drives, so there is nothing store-wide to read there — but the reports router
- * answers exactly the ledger this screen needs: admin-only, order and user
- * populated, filtered by date, status and method, and paged.
- *
- * A payment row is written by checkout, so an empty table here is normal until
- * the storefront takes its first order rather than a sign of a missing route.
- */
+
 export default function PaymentsPage() {
   const [filters, setFilters] = useState(() => ({
     ...defaultRange(),
@@ -56,7 +54,7 @@ export default function PaymentsPage() {
   return (
     <div className="flex flex-col gap-7">
       <PageHeader
-        eyebrow="Commerce"
+        // eyebrow="Commerce"
         title="Payments"
         copy="Transactions against orders, with their gateway references."
         action={
@@ -76,7 +74,7 @@ export default function PaymentsPage() {
         }
       />
 
-      <div className="grid gap-4 sm:grid-cols-3">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 max-sm:[&>*:last-child]:col-span-2">
         <Figure label="Payments" value={formatNumber(totals.payments)} />
         <Figure label="Settled" value={formatNumber(totals.settledCount)} />
         <Figure
@@ -86,7 +84,7 @@ export default function PaymentsPage() {
       </div>
 
       <Card padded={false}>
-        <div className="flex flex-col gap-3 border-b border-line p-4 md:flex-row md:items-end">
+        <div className="grid gap-3 border-b border-line p-4 sm:grid-cols-2 md:flex md:flex-row md:items-end">
           <TextInput
             label="From"
             type="date"
@@ -131,7 +129,7 @@ export default function PaymentsPage() {
           </Select>
         </div>
 
-        <div className="flex flex-col gap-5 p-5">
+        <div className="flex flex-col gap-5 p-4 sm:p-5">
           <FormError error={download.error} />
 
           <DataState
@@ -150,8 +148,7 @@ export default function PaymentsPage() {
             rows={6}
           >
             <>
-              {/* The status split is the ledger's own summary, so it sits with
-                  the rows rather than in the figures above. */}
+             
               {totals.byStatus?.length ? (
                 <div className="flex flex-wrap gap-2">
                   {totals.byStatus.map((row) => (
@@ -171,7 +168,57 @@ export default function PaymentsPage() {
                 </div>
               ) : null}
 
-              <Table>
+              <TableOrCards
+                minWidth="52rem"
+                cards={
+                  <Records>
+                    {rows.map((payment) => (
+                      <Record
+                        key={payment.paymentId}
+                        title={
+                          <span className="font-mono text-[13px]">
+                            {payment.orderNumber ?? "—"}
+                          </span>
+                        }
+                        subtitle={
+                          [payment.customer, payment.email]
+                            .filter(Boolean)
+                            .join(" · ") || undefined
+                        }
+                        badges={
+                          <Badge tone={PAYMENT_TONE[payment.status]}>
+                            {payment.status}
+                          </Badge>
+                        }
+                      >
+                        <RecordField label="Amount">
+                          <span className="tnum font-medium">
+                            {formatPrice(payment.amount)}
+                          </span>
+                        </RecordField>
+
+                        <RecordField label="Method">
+                          {payment.method}
+                        </RecordField>
+
+                        <RecordField label="Taken" wide>
+                          <span className="tnum">
+                            {formatDateTime(payment.createdAt)}
+                          </span>
+                        </RecordField>
+
+                        <RecordField label="Transaction" wide>
+                          <span className="font-mono text-[12px] text-mist">
+                            {payment.transactionId ??
+                              payment.failureReason ??
+                              "—"}
+                          </span>
+                        </RecordField>
+                      </Record>
+                    ))}
+                  </Records>
+                }
+              >
                 <thead>
                   <tr>
                     <Th>Taken</Th>
@@ -220,7 +267,7 @@ export default function PaymentsPage() {
                     </Tr>
                   ))}
                 </tbody>
-              </Table>
+              </TableOrCards>
 
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <p className="text-[12.5px] text-mist">
@@ -273,11 +320,11 @@ export default function PaymentsPage() {
 
 function Figure({ label, value }) {
   return (
-    <div className="flex flex-col gap-1 rounded-xl border border-line bg-paper px-5 py-4">
-      <span className="text-[11.5px] font-medium uppercase tracking-[0.14em] text-mist">
+    <div className="flex flex-col gap-1 rounded-xl border border-line bg-paper px-4 py-3.5 sm:px-5 sm:py-4">
+      <span className="truncate text-[11px] font-medium uppercase tracking-[0.14em] text-mist sm:text-[11.5px]">
         {label}
       </span>
-      <span className="tnum text-[1.5rem] font-semibold leading-none text-ink">
+      <span className="tnum text-[clamp(1.15rem,4.6vw,1.5rem)] font-semibold leading-none text-ink">
         {value}
       </span>
     </div>

@@ -9,7 +9,7 @@ const TONES = {
   outline: "border border-line-strong bg-paper text-ink",
 };
 
-/** The paddle glyph on its own — favicon, avatar fallback, tight spaces. */
+
 export function LogoMark({ size = "md", tone = "volt", className = "" }) {
   return (
     <span
@@ -23,10 +23,6 @@ export function LogoMark({ size = "md", tone = "volt", className = "" }) {
   );
 }
 
-/**
- * Mark + wordmark. The panel adds an "ADMIN" tag under the name so a
- * screenshot is never mistaken for the storefront.
- */
 export default function Logo({
   size = "md",
   tone = "volt",

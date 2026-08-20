@@ -1,18 +1,6 @@
 import { api, unwrap } from "@/lib/api";
 
-/**
- * /api/dashboard — nine read-only aggregates, all admin-only.
- *
- * Everything here is computed by the API (Mongo aggregations over orders,
- * products, users and payments); the panel does no arithmetic of its own on
- * top of it. Cancelled orders are excluded from revenue on the server, so a
- * number shown here already follows that rule.
- *
- * Each function returns the `data` half of the envelope and falls back to an
- * empty shape rather than null, so a screen never has to guard every read.
- */
 
-/** KPI cards: `{ totals, orderStatus, last30Days, meta }`. */
 export async function getSummary(options) {
   return unwrap(await api.get("/dashboard/summary", options), {
     totals: {},
@@ -22,7 +10,6 @@ export async function getSummary(options) {
   });
 }
 
-/** The ranges the API buckets by; anything else falls back to 30d server-side. */
 export const SALES_RANGES = [
   { value: "7d", label: "Last 7 days" },
   { value: "30d", label: "Last 30 days" },
@@ -30,7 +17,6 @@ export const SALES_RANGES = [
   { value: "12m", label: "Last 12 months" },
 ];
 
-/** Revenue/orders/units per bucket: `{ range, granularity, totals, series }`. */
 export async function getSalesAnalytics({ range, ...options } = {}) {
   return unwrap(
     await api.get("/dashboard/sales", { ...options, query: { range } }),
@@ -38,7 +24,6 @@ export async function getSalesAnalytics({ range, ...options } = {}) {
   );
 }
 
-/** `{ orderStatus: [{status,count,amount}], paymentStatus: [...] }`. */
 export async function getOrderStatusBreakdown(options) {
   return unwrap(await api.get("/dashboard/orders/status", options), {
     orderStatus: [],
@@ -63,7 +48,6 @@ export async function getTopProducts({ limit, range, ...options } = {}) {
   );
 }
 
-/** `{ threshold, count, products }` — note the products are nested. */
 export async function getLowStockProducts({ threshold, limit, ...options } = {}) {
   return unwrap(
     await api.get("/dashboard/products/low-stock", {
@@ -85,7 +69,6 @@ export async function getTopCustomers({ limit, ...options } = {}) {
   );
 }
 
-/** `{ payments: [{status,count,amount}], orderPaymentMethods: [...] }`. */
 export async function getPaymentSummary(options) {
   return unwrap(await api.get("/dashboard/payments/summary", options), {
     payments: [],
@@ -93,7 +76,6 @@ export async function getPaymentSummary(options) {
   });
 }
 
-/** Stock severity, as returned by the low-stock route. */
 export const SEVERITY_TONE = {
   OUT_OF_STOCK: "bad",
   LOW_STOCK: "warn",

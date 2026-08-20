@@ -4,18 +4,7 @@ import { useCallback, useMemo } from "react";
 import { useApiQuery } from "@/hooks/useApi";
 import * as dashboardService from "@/services/dashboard.service";
 
-/**
- * The dashboard reads /api/dashboard, which does every aggregation server-side.
- *
- * Nine endpoints rather than one, so a slow panel never blocks the KPI row:
- * each card and table owns its own request and renders as soon as that one
- * lands. `useDashboard` bundles the ones that always load together and exposes
- * a single `refetch` for the toolbar button.
- *
- * The sales series is kept separate (`useSalesAnalytics`) because changing the
- * range should re-fetch that chart alone, and the low-stock and top-product
- * panels take parameters of their own.
- */
+
 export function useDashboard() {
   const summary = useApiQuery(
     useCallback((signal) => dashboardService.getSummary({ signal }), []),
@@ -53,7 +42,6 @@ export function useDashboard() {
     useCallback((signal) => dashboardService.getPaymentSummary({ signal }), []),
   );
 
-  // One button refreshes the whole screen; the panels keep their own state.
   const refetch = useCallback(() => {
     summary.refetch();
     status.refetch();
@@ -77,8 +65,7 @@ export function useDashboard() {
     categories,
     customers,
     payments,
-    // The banner at the top reports the summary failing; every other panel
-    // reports its own, so one dead endpoint does not blank the screen.
+
     error: summary.error,
     loading: summary.loading,
     refetch,

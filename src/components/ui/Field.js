@@ -8,12 +8,7 @@ const CONTROL =
   "transition-colors focus:border-volt-deep focus:outline-none focus:ring-2 focus:ring-volt-deep/25 " +
   "disabled:bg-surface disabled:text-mist";
 
-/**
- * Label + control + hint/error, wired together by a generated id.
- *
- * The error is rendered in the same node the input points at with
- * `aria-describedby`, so it is announced on focus rather than only seen.
- */
+
 export function Field({
   label,
   hint,

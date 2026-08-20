@@ -4,13 +4,7 @@ import { useCallback, useMemo, useState } from "react";
 import { useApiMutation, useApiQuery } from "@/hooks/useApi";
 import * as reportService from "@/services/report.service";
 
-/**
- * One hook for all six reports.
- *
- * `params` is an object, and `useApiQuery` keys on the fetcher's identity, so
- * it is serialised into the dependency list — passing a fresh object literal
- * from the screen on every render would otherwise refetch forever.
- */
+
 export function useReport(report, params = {}) {
   const key = JSON.stringify(params);
 
@@ -30,10 +24,7 @@ export function useReport(report, params = {}) {
   };
 }
 
-/**
- * The CSV download. It is a mutation rather than a query — it has a side
- * effect (a file lands in Downloads) and only runs when the button is pressed.
- */
+
 export function useReportDownload() {
   const [done, setDone] = useState(null);
 

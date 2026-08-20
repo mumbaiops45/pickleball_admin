@@ -17,15 +17,19 @@ import {
 } from "@/components/ui/Icons";
 import Modal from "@/components/ui/Modal";
 import PageHeader from "@/components/ui/PageHeader";
-import { Table, Td, Th, Tr } from "@/components/ui/Table";
+import {
+  Record,
+  RecordField,
+  Records,
+  TableOrCards,
+  Td,
+  Th,
+  Tr,
+} from "@/components/ui/Table";
 import { useCategories, useDeleteCategory } from "@/hooks/useCategories";
 import { formatDate } from "@/lib/format";
 
-/**
- * Categories are the one resource with a complete round trip on the API, so
- * this screen exercises the whole stack: query hook, mutation hooks, optimism
- * left off in favour of a refetch (the list is tiny and always correct).
- */
+
 export default function CategoriesPage() {
   const [search, setSearch] = useState("");
   const [editing, setEditing] = useState(undefined); // undefined = closed
@@ -36,10 +40,6 @@ export default function CategoriesPage() {
   });
   const remove = useDeleteCategory();
 
-  // `pendingDelete?._id` rather than `pendingDelete._id`: the React Compiler
-  // lifts the property path into the memo dependency check for this callback,
-  // which runs on every render — and `pendingDelete` is null until a row's
-  // trash button is pressed.
   const confirmDelete = async () => {
     const result = await remove.mutate(pendingDelete?._id);
     if (result === null) return;
@@ -51,7 +51,7 @@ export default function CategoriesPage() {
   return (
     <div className="flex flex-col gap-7">
       <PageHeader
-        eyebrow="Catalogue"
+        // eyebrow="Catalogue"
         title="Categories"
         copy="How products are grouped on the storefront. Names are unique."
         action={
@@ -84,7 +84,7 @@ export default function CategoriesPage() {
           </div>
         </div>
 
-        <div className="p-5">
+        <div className="p-4 sm:p-5">
           <DataState
             loading={loading}
             error={error}
@@ -109,7 +109,57 @@ export default function CategoriesPage() {
             }
             rows={5}
           >
-            <Table>
+            <TableOrCards
+              minWidth="38rem"
+              cards={
+                <Records>
+                  {filtered.map((category) => (
+                    <Record
+                      key={category._id}
+                      media={<Thumb src={category.image} alt="" />}
+                      title={category.name}
+                      subtitle={category.description || undefined}
+                      badges={
+                        <Badge tone={category.isActive ? "good" : "neutral"} dot>
+                          {category.isActive ? "Active" : "Hidden"}
+                        </Badge>
+                      }
+                      actions={
+                        <>
+                          <Button
+                            tone="outline"
+                            size="sm"
+                            icon={EditIcon}
+                            aria-label={`Edit ${category.name}`}
+                            onClick={() => setEditing(category)}
+                          >
+                            Edit
+                          </Button>
+                          <Button
+                            tone="ghost"
+                            size="sm"
+                            icon={TrashIcon}
+                            aria-label={`Delete ${category.name}`}
+                            onClick={() => {
+                              remove.reset();
+                              setPendingDelete(category);
+                            }}
+                          >
+                            Delete
+                          </Button>
+                        </>
+                      }
+                    >
+                      <RecordField label="Created">
+                        <span className="tnum">
+                          {formatDate(category.createdAt)}
+                        </span>
+                      </RecordField>
+                    </Record>
+                  ))}
+                </Records>
+              }
+            >
               <thead>
                 <tr>
                   <Th>Category</Th>
@@ -174,12 +224,11 @@ export default function CategoriesPage() {
                   </Tr>
                 ))}
               </tbody>
-            </Table>
+            </TableOrCards>
           </DataState>
         </div>
       </Card>
 
-      {/* Mounted only while open, so each visit starts from clean state. */}
       {editing !== undefined ? (
         <CategoryForm
           category={editing}
@@ -227,12 +276,7 @@ export default function CategoriesPage() {
   );
 }
 
-/**
- * `category.image` is either a data URI written by the picker or an arbitrary
- * remote URL, so `next/image` is the wrong tool — neither can be declared in
- * `images.remotePatterns`. A missing or dead source falls back to the glyph
- * rather than a broken-image icon.
- */
+
 function Thumb({ src, alt }) {
   const [broken, setBroken] = useState(false);
 

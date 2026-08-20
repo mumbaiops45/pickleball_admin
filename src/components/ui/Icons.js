@@ -1,10 +1,4 @@
-/**
- * Icon set, backed by lucide-react.
- *
- * Thin named adapters rather than direct imports, so call sites stay stable
- * and every icon inherits the same stroke weight. Sizing comes from Tailwind
- * classes (`size-4`) — the CSS wins over the width/height lucide renders.
- */
+
 import {
   ArrowLeft,
   ArrowRight,

@@ -7,13 +7,7 @@ import LoginForm from "@/components/auth/LoginForm";
 import Logo, { LogoMark } from "@/components/ui/Logo";
 import { useAuth } from "@/store/AuthProvider";
 
-/**
- * Split login: animated court on the left, form on the right.
- *
- * Someone already signed in who lands here is sent on to the dashboard rather
- * than shown a form they don't need — but only once `hydrated`, since the
- * session is read from localStorage after the first paint.
- */
+
 export default function LoginPage() {
   const { isAuthenticated, hydrated } = useAuth();
   const router = useRouter();
@@ -26,7 +20,7 @@ export default function LoginPage() {
     <div className="grid min-h-dvh lg:grid-cols-[1.05fr_1fr]">
       <BrandPanel />
 
-      <main className="relative flex items-center justify-center overflow-hidden bg-paper px-5 py-12 sm:px-10">
+      <main className="pad-safe-x pad-safe-b relative flex items-center justify-center overflow-hidden bg-paper py-10 [--pad-b:2.5rem] [--pad-x:1.25rem] sm:py-12 sm:[--pad-x:2.5rem]">
         {/* A ball drifting behind the column, echoing the court next door. */}
         <BallWatermark />
 
@@ -36,7 +30,7 @@ export default function LoginPage() {
           </div>
 
           <div className="pb-rise" style={{ "--d": "60ms" }}>
-            <h1 className="mt-8 text-[1.9rem] font-semibold leading-[1.1] tracking-[-0.035em] lg:mt-0">
+            <h1 className="mt-8 text-[clamp(1.6rem,7vw,1.9rem)] font-semibold leading-[1.1] tracking-[-0.035em] lg:mt-0">
               Sign in
             </h1>
             <p className="mt-2 text-sm leading-relaxed text-mist">
@@ -58,8 +52,7 @@ export default function LoginPage() {
 function BrandPanel() {
   return (
     <aside className="dark-chrome relative hidden overflow-hidden bg-shell pt-12 pl-12 pr-12 lg:flex lg:flex-col">
-      {/* Two soft discs instead of a background image — nothing to load, and
-          the panel keeps its shape at any viewport height. */}
+      
       <div
         aria-hidden="true"
         className="pointer-events-none absolute -right-24 -top-24 size-104 rounded-full bg-volt/12 blur-[120px]"
@@ -83,8 +76,7 @@ function BrandPanel() {
         </p>
       </div>
 
-      {/* The rally gets a band of its own below the copy — bled out to the
-          panel edges — so the paddles never swing across the headline. */}
+ 
       <div className="relative -mx-12 mt-10 min-h-[300px] flex-1">
         <CourtScene />
       </div>
@@ -92,11 +84,7 @@ function BrandPanel() {
   );
 }
 
-/**
- * Ball drawn as line art behind the form. Filled holes on a filled disc just
- * read as a blob at this opacity, so it is an outline with solid holes —
- * the shape survives being nearly invisible.
- */
+
 function BallWatermark() {
   return (
     <svg

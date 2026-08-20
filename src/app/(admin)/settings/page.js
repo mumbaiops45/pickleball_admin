@@ -7,17 +7,7 @@ import Card from "@/components/ui/Card";
 import { LogOutIcon, ShieldIcon } from "@/components/ui/Icons";
 import { useAuth } from "@/store/AuthProvider";
 
-/**
- * The signed-in account, and the one action that belongs to it.
- *
- * Read-only: the API exposes no profile or preference endpoint, so the details
- * shown here are the copy returned at login. Connection details are
- * configuration rather than settings — they live in `.env.local` and in
- * `lib/api.js`, and are deliberately not restated on screen.
- *
- * A single small card is centred rather than pinned to the top-left of a
- * 7xl-wide shell, where it would read as a page that failed to finish loading.
- */
+
 export default function SettingsPage() {
   const { user, signOut } = useAuth();
 
@@ -36,12 +26,12 @@ export default function SettingsPage() {
         <div className="flex flex-col items-center text-center">
           <Avatar user={user} size="lg" />
 
-          <p className="mt-4 text-[15px] font-semibold text-ink">
+          <p className="break-anywhere mt-4 text-[15px] font-semibold text-ink">
             {user?.name?.trim() || "Unnamed administrator"}
           </p>
 
           {user?.email ? (
-            <p className="mt-1 max-w-full truncate text-[13px] text-mist">
+            <p className="break-anywhere mt-1 max-w-full text-[13px] text-mist">
               {user.email}
             </p>
           ) : null}

@@ -1,15 +1,4 @@
-/**
- * Order status as a lifecycle rather than as a pie.
- *
- * An order moves PENDING → CONFIRMED → PROCESSING → SHIPPED → DELIVERED, and
- * three of those stages share the `info` tone, so any chart that separates
- * rows by colour alone would render them identically. Numbering the stages and
- * giving each its own tile says what a ring cannot: which way the work flows,
- * and where it is piling up.
- *
- * CANCELLED is not a stage — it is the way out — so it is passed as `exits`
- * and drawn below the flow rather than inside it.
- */
+
 import Badge from "@/components/ui/Badge";
 import { formatNumber, formatPrice } from "@/lib/format";
 
@@ -29,10 +18,10 @@ export default function PipelineStages({ stages, exits = [], total }) {
         {stages.map((stage, index) => (
           <li
             key={stage.status}
-            className="flex flex-col gap-2 rounded-lg border border-line bg-surface/60 p-3"
+            className="flex flex-col gap-2 rounded-lg border border-line bg-surface/60 p-2.5 sm:p-3"
           >
             <div className="flex items-baseline justify-between gap-2">
-              <span className="text-[10.5px] font-semibold uppercase tracking-[0.1em] text-mist">
+              <span className="min-w-0 truncate text-[10.5px] font-semibold uppercase tracking-[0.1em] text-mist">
                 {stage.status}
               </span>
               <span className="tnum text-[10.5px] font-medium text-faint">
@@ -40,12 +29,9 @@ export default function PipelineStages({ stages, exits = [], total }) {
               </span>
             </div>
 
-            <span className="tnum text-[1.4rem] font-semibold leading-none tracking-[-0.03em] text-ink">
+            <span className="tnum text-[1.25rem] font-semibold leading-none tracking-[-0.03em] text-ink sm:text-[1.4rem]">
               {formatNumber(stage.count)}
             </span>
-
-            {/* Share of every order ever placed — the bar and the percentage
-                say the same thing, so neither has to be read alone. */}
             <span className="block h-1.5 w-full overflow-hidden rounded-full bg-surface-2">
               <span
                 className={`block h-full rounded-full ${ACCENTS[stage.tone] ?? ACCENTS.accent}`}

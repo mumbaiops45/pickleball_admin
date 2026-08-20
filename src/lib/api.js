@@ -1,15 +1,6 @@
 import { readToken } from "@/store/session";
 
-/**
- * The single fetch wrapper every service goes through.
- *
- * The Express API answers with an envelope — `{ success, message, data }` —
- * so `request` hands the whole envelope back and each service picks the part
- * it needs. Errors always surface as `ApiError`, including the two cases the
- * backend does not format itself: a dead/blocked connection (status 0) and
- * the HTML page Express' default error handler returns when a controller
- * calls `next(error)` (see API-REVIEW.md).
- */
+
 
 export const API_URL = (
   process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api"

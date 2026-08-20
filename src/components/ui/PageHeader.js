@@ -1,7 +1,6 @@
-/** Title block at the top of a screen: eyebrow, heading, copy, actions. */
 export default function PageHeader({ eyebrow, title, copy, action }) {
   return (
-    <header className="flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
+    <header className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between md:gap-5">
       <div className="flex max-w-2xl flex-col">
         {eyebrow ? (
           <span className="flex items-center gap-2.5 text-[11px] font-medium uppercase tracking-[0.2em] text-volt-deep">
@@ -17,7 +16,12 @@ export default function PageHeader({ eyebrow, title, copy, action }) {
         ) : null}
       </div>
 
-      {action ? <div className="flex shrink-0 gap-2">{action}</div> : null}
+
+      {action ? (
+        <div className="flex shrink-0 flex-wrap gap-2 [&>*]:flex-1 sm:[&>*]:flex-none">
+          {action}
+        </div>
+      ) : null}
     </header>
   );
 }

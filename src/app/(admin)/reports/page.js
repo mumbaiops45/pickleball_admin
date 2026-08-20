@@ -8,7 +8,15 @@ import DataState, { FormError } from "@/components/ui/DataState";
 import { Select, TextInput } from "@/components/ui/Field";
 import { DownloadIcon, RefreshIcon, SearchIcon } from "@/components/ui/Icons";
 import PageHeader from "@/components/ui/PageHeader";
-import { Table, Td, Th, Tr } from "@/components/ui/Table";
+import {
+  Record,
+  RecordField,
+  Records,
+  TableOrCards,
+  Td,
+  Th,
+  Tr,
+} from "@/components/ui/Table";
 import { useCategories } from "@/hooks/useCategories";
 import { useReport, useReportDownload } from "@/hooks/useReports";
 import {
@@ -45,19 +53,7 @@ const ORDER_PAYMENT_STATUSES = ["PENDING", "PAID", "FAILED", "REFUNDED"];
 const PAYMENT_STATUSES = ["PENDING", "SUCCESS", "FAILED", "REFUNDED"];
 const METHODS = ["COD", "ONLINE"];
 
-/**
- * /api/reports, one screen.
- *
- * The six reports answer the same envelope — `{ range, totals, pagination,
- * rows }` — so the filters, the totals strip, the table and the pager are
- * written once and driven by the descriptor in `REPORT_VIEWS`. Adding a
- * seventh report is a new entry there, not a new page.
- *
- * Filters live in one state object per report and are sent verbatim as the
- * query string; `buildUrl` drops the empty ones, so "any status" needs no
- * special case. Every change resets the page back to 1, since page 4 of a
- * different filter is a different set of rows.
- */
+
 export default function ReportsPage() {
   const [report, setReport] = useState("sales");
   const [filters, setFilters] = useState(() => initialFilters("sales"));
@@ -94,7 +90,7 @@ export default function ReportsPage() {
   return (
     <div className="flex flex-col gap-7">
       <PageHeader
-        eyebrow="Analysis"
+        // eyebrow="Analysis"
         title="Reports"
         copy="Registers behind the dashboard numbers, filterable and downloadable as CSV."
         action={
@@ -113,8 +109,6 @@ export default function ReportsPage() {
         }
       />
 
-      {/* Tabs rather than a select: six is few enough to show at once, and the
-          current report has to be obvious when the table below changes shape. */}
       <div
         role="tablist"
         aria-label="Report"
@@ -127,7 +121,7 @@ export default function ReportsPage() {
             role="tab"
             aria-selected={entry.value === report}
             onClick={() => selectReport(entry.value)}
-            className={`rounded-lg px-3.5 py-2 text-[13px] font-medium transition-colors ${
+            className={`tap rounded-lg px-3.5 py-2.5 text-[13px] font-medium transition-colors ${
               entry.value === report
                 ? "bg-ink text-paper"
                 : "text-mist hover:bg-surface hover:text-ink"
@@ -139,7 +133,7 @@ export default function ReportsPage() {
       </div>
 
       <Card padded={false}>
-        <div className="flex flex-col gap-3 border-b border-line p-4 md:flex-row md:flex-wrap md:items-end">
+        <div className="grid gap-3 border-b border-line p-4 sm:grid-cols-2 md:flex md:flex-row md:flex-wrap md:items-end">
           {view.dated ? (
             <>
               <TextInput
@@ -175,7 +169,7 @@ export default function ReportsPage() {
           </Select>
         </div>
 
-        <div className="flex flex-col gap-5 p-5">
+        <div className="flex flex-col gap-5 p-4 sm:p-5">
           <FormError error={download.error} />
 
           <DataState
@@ -188,23 +182,52 @@ export default function ReportsPage() {
             rows={6}
           >
             <>
-              <dl className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+              <dl className="grid grid-cols-2 gap-3 xl:grid-cols-4">
                 {view.totals(totals).map((total) => (
                   <div
                     key={total.label}
-                    className="flex flex-col gap-1 rounded-lg border border-line bg-surface px-4 py-3"
+                    className="flex flex-col gap-1 rounded-lg border border-line bg-surface px-3.5 py-3 sm:px-4"
                   >
-                    <dt className="text-[11.5px] font-medium uppercase tracking-[0.14em] text-mist">
+                    <dt className="truncate text-[11px] font-medium uppercase tracking-[0.14em] text-mist sm:text-[11.5px]">
                       {total.label}
                     </dt>
-                    <dd className="tnum text-[1.2rem] font-semibold leading-none text-ink">
+                    <dd className="tnum text-[clamp(1rem,4.2vw,1.2rem)] font-semibold leading-none text-ink">
                       {total.value}
                     </dd>
                   </div>
                 ))}
               </dl>
 
-              <Table>
+             x
+              <TableOrCards
+                minWidth={`${Math.max(38, view.columns.length * 7)}rem`}
+                cards={
+                  <Records>
+                    {rows.map((row, index) => {
+                      const [lead, ...rest] = view.columns;
+
+                      return (
+                        <Record
+                          key={view.rowKey(row, index)}
+                          title={lead.render(row)}
+                        >
+                          {rest.map((column) => (
+                            <RecordField
+                              key={column.key}
+                              label={column.label}
+                              wide={column.align !== "right"}
+                            >
+                              <div className={column.className}>
+                                {column.render(row)}
+                              </div>
+                            </RecordField>
+                          ))}
+                        </Record>
+                      );
+                    })}
+                  </Records>
+                }
+              >
                 <thead>
                   <tr>
                     {view.columns.map((column) => (
@@ -229,7 +252,7 @@ export default function ReportsPage() {
                     </Tr>
                   ))}
                 </tbody>
-              </Table>
+              </TableOrCards>
 
               <Pager
                 pagination={pagination}
@@ -245,7 +268,6 @@ export default function ReportsPage() {
   );
 }
 
-/** Prev/next only — the API returns a page count, not a cursor. */
 function Pager({ pagination, rows, onGoto, range }) {
   const { page, totalPages, total, hasNext, hasPrev } = pagination ?? {};
 
@@ -300,10 +322,6 @@ function initialFilters(report) {
   };
 }
 
-/* ------------------------------------------------------------------ *
- * The six reports. Each one names its extra filters, the totals strip
- * it wants, and its columns; everything else is shared above.
- * ------------------------------------------------------------------ */
 
 const money = (key) => (row) => formatPrice(row[key]);
 const count = (key) => (row) => formatNumber(row[key]);
@@ -367,7 +385,7 @@ const REPORT_VIEWS = {
     dated: true,
     filters: ({ filters, set }) => (
       <>
-        <div className="relative flex-1 md:min-w-56">
+        <div className="relative sm:col-span-2 md:min-w-56 md:flex-1">
           <SearchIcon
             className="pointer-events-none absolute left-3 top-[2.85rem] size-4 -translate-y-1/2 text-faint"
             aria-hidden="true"

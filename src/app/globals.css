@@ -1,13 +1,7 @@
+
+@import url("https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@200;300;400;500;600;700;800&display=swap");
 @import "tailwindcss";
 
-/**
- * Admin palette, borrowed from the storefront so the two apps read as one
- * brand: ink text on paper, volt as the accent. The panel adds a dark
- * chrome (`shell`) for the sidebar and status colours for the enum badges.
- *
- * The panel is light-only on purpose — an operator switching a customer's
- * order status should see the same colours the storefront team designs against.
- */
 @theme {
   /* Surfaces */
   --color-paper: #ffffff;
@@ -24,12 +18,10 @@
   --color-mist: #5f6672;
   --color-faint: #8b9199;
 
-  /* Lines — line-strong clears 3:1 on every surface above (WCAG 1.4.11) */
   --color-line: #dedcd2;
   --color-line-strong: #7e8379;
 
-  /* Brand. volt is a FILL colour only (1.2:1 as text on paper);
-     volt-deep is the readable version for text, icons and borders. */
+
   --color-volt: #d4ff3f;
   --color-volt-deep: #4e6b00;
 
@@ -43,11 +35,8 @@
   --color-info: #1d4f9c;
   --color-info-tint: #e8effb;
 
-  /* The fallbacks are not decoration: next/font cannot reach Google Fonts on
-     an offline or proxied machine, and the build only warns. These are what
-     the panel renders in when that happens. */
-  --font-sans: var(--font-jakarta-sans), "Segoe UI", ui-sans-serif, system-ui,
-    sans-serif;
+
+  --font-sans: "Plus Jakarta Sans", sans-serif;
   --font-mono: var(--font-geist-mono), ui-monospace, "Cascadia Mono", monospace;
 }
 
@@ -58,6 +47,8 @@
 
 body {
   background-color: var(--color-surface);
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
   color: var(--color-ink);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
@@ -112,32 +103,66 @@ body {
   }
 }
 
-/* ── Pickleball scene ────────────────────────────────────────────────
-   The login brand panel is a court seen from behind the baseline: lines
-   draw themselves in, a ball rallies end to end, and the paddles swing
-   to meet it. Everything is CSS on a handful of absolutely positioned
-   boxes — no image, no canvas, no animation library — so the panel costs
-   nothing to load and stays sharp at any size.
 
-   One clock drives the whole thing:
-     0.8s  a single hop (ground → apex)
-     1.6s  a full bounce (ground → apex → ground)
-     3.2s  one traverse of the court = 2 bounces
-     6.4s  a full rally there and back = one paddle-swing cycle
-   Keep those multiples in step or the ball starts bouncing off nothing.
+@media (pointer: coarse) {
+  input,
+  select,
+  textarea {
+    font-size: 16px;
+  }
+}
 
-   Geometry hangs off two variables so the ball, the paddles and the
-   contact flash always meet at the same spot: --pb-reach is how far the
-   ball travels from centre, --pb-floor is the height its bounce lands on.
+@media (pointer: coarse) {
+  ::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+  }
+}
 
-   `prefers-reduced-motion` already freezes every animation globally
-   further up this file, which leaves a still, legible court. */
+
+.pad-safe-x {
+  padding-left: max(var(--pad-x, 0px), env(safe-area-inset-left));
+  padding-right: max(var(--pad-x, 0px), env(safe-area-inset-right));
+}
+
+.pad-safe-b {
+  padding-bottom: max(var(--pad-b, 0px), env(safe-area-inset-bottom));
+}
+
+.inset-safe-l {
+  padding-left: env(safe-area-inset-left);
+}
+
+
+@media (pointer: coarse) {
+  .tap {
+    min-height: 44px;
+    min-width: 44px;
+  }
+}
+
+
+@media (hover: none) {
+  .hover-reveal {
+    opacity: 1;
+  }
+}
+
+
+.scroll-x {
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+.break-anywhere {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+
 
 .pb-scene {
-  /* The rally has to fit the panel: the panel is ~51vw, and a paddle needs
-     ~100px of clearance past the turnaround, so half the panel minus that
-     clearance is the widest the ball can swing. Fluid rather than stepped,
-     which keeps the paddles on-panel at every width between the breakpoints. */
   --pb-reach: clamp(120px, 25.6vw - 110px, 260px);
   --pb-floor: 73%;
   position: absolute;
@@ -146,32 +171,14 @@ body {
   pointer-events: none;
 }
 
-/* The court is laid flat with a perspective tilt so the far baseline
-   recedes; the mask fades it out before it reaches the panel edges. */
+
 .pb-court {
   position: absolute;
-  /* Centred with margins rather than `translate`, and offset by half its own
-     height, so the box already straddles the floor line before any rotation.
-     `translate` would not do: it runs before `transform` but shares the same
-     origin, so the plane would end up pivoting about where it *used* to be
-     and swing off the bottom of the panel.
-
-     The explicit height matters too — without one the svg falls back to
-     150px and the tilt flattens it into an invisible sliver. */
   left: 50%;
-  /* Narrow enough that both sidelines land inside the panel — at 118% they
-     sat off-canvas and the court lost its outline. */
   margin-left: -47%;
-  /* Sized off the scene box rather than in pixels: the scene is now a band
-     below the copy, not the whole panel, so a fixed 470px plane hung out of
-     the band and lost its near baseline. Half the height above the floor
-     line keeps the plane centred on it at any band height. */
   top: calc(var(--pb-floor) - 75%);
   width: 94%;
   height: 150%;
-  /* A shallower tilt with a nearer vanishing point: at 64deg the plane was
-     almost edge-on and the sidelines collapsed into stripes. This keeps the
-     far baseline visibly narrower than the near one. */
   transform: perspective(620px) rotateX(56deg);
   transform-origin: 50% 50%;
   -webkit-mask-image: radial-gradient(ellipse 48% 60% at 50% 48%, #000 30%, transparent 100%);
@@ -194,8 +201,6 @@ body {
   opacity: 0.2;
 }
 
-/* The service boxes get a faint wash so the court reads as a surface
-   rather than as four loose lines. */
 .pb-deck {
   fill: var(--color-volt);
   opacity: 0;
@@ -221,10 +226,6 @@ body {
   }
 }
 
-/* ── The ball ──
-   Four nested boxes so no two animations fight over one property:
-   .pb-rally moves it across, .pb-hop lifts it, .pb-squash deforms it on
-   contact, and the glyph inside spins. */
 .pb-rally {
   position: absolute;
   left: 50%;
@@ -311,13 +312,6 @@ body {
   }
 }
 
-/* ── The paddles ──
-   Anchored off centre by the same --pb-reach the ball travels, so the face
-   is waiting exactly where the ball turns around — a 58×126 svg placed so
-   its face overlaps the turn by ~14px, and its grip end sits on the floor
-   line. pb-swing peaks at 50% of its 6.4s cycle: the right paddle runs
-   unshifted (the ball reaches it at 3.2s) and the left is pulled half a
-   cycle back so the two alternate. */
 .pb-paddle {
   position: absolute;
   left: 50%;

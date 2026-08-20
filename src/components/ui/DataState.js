@@ -7,14 +7,7 @@ import {
   WarnIcon,
 } from "@/components/ui/Icons";
 
-/**
- * The loading / error / empty triad, in one component so every screen reports
- * the same way.
- *
- * A 501 is treated as its own state rather than an error: it means the screen
- * is finished but the API route it needs does not exist yet, and the hint the
- * service attached names the endpoint to add.
- */
+
 export default function DataState({
   loading,
   error,
@@ -105,7 +98,7 @@ export function Notice({
 }) {
   return (
     <div
-      className={`flex flex-col items-start gap-3 rounded-xl border p-6 ${NOTICE_TONES[tone]}`}
+      className={`flex flex-col items-start gap-3 rounded-xl border p-4 sm:p-6 ${NOTICE_TONES[tone]}`}
     >
       <div className="flex items-start gap-3">
         {tone === "neutral" ? null : (
@@ -115,7 +108,9 @@ export function Notice({
           {title ? (
             <p className="text-sm font-semibold text-ink">{title}</p>
           ) : null}
-          {body ? <p className="text-[13.5px] leading-relaxed">{body}</p> : null}
+          {body ? (
+            <p className="break-anywhere text-[13.5px] leading-relaxed">{body}</p>
+          ) : null}
           {footnote ? (
             <p className="text-[12.5px] text-mist">{footnote}</p>
           ) : null}
@@ -134,7 +129,7 @@ export function FormError({ error }) {
   return (
     <p
       role="alert"
-      className="flex items-start gap-2 rounded-lg border border-bad/25 bg-bad-tint px-3 py-2.5 text-[13px] text-bad"
+      className="break-anywhere flex items-start gap-2 rounded-lg border border-bad/25 bg-bad-tint px-3 py-2.5 text-[13px] text-bad"
     >
       <WarnIcon className="mt-px size-4 shrink-0" aria-hidden="true" />
       <span>{error.message ?? String(error)}</span>

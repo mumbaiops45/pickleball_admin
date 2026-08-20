@@ -4,11 +4,7 @@ import { useCallback, useMemo } from "react";
 import { useApiMutation, useApiQuery } from "@/hooks/useApi";
 import * as customerService from "@/services/customer.service";
 
-/**
- * `GET /auth/users` returns every account unfiltered, so the search and the
- * role/state filters run in the browser — same arrangement as the products
- * list.
- */
+
 export function useCustomers({ search = "", role = "", state = "" } = {}) {
   const query = useApiQuery(
     useCallback((signal) => customerService.listCustomers({ signal }), []),

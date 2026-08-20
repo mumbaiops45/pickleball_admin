@@ -19,21 +19,22 @@ import Modal from "@/components/ui/Modal";
 import PageHeader from "@/components/ui/PageHeader";
 import ProductDetail from "@/components/products/ProductDetail";
 import ProductForm from "@/components/products/ProductForm";
-import { Table, Td, Th, Tr } from "@/components/ui/Table";
+import {
+  Record,
+  RecordField,
+  Records,
+  TableOrCards,
+  Td,
+  Th,
+  Tr,
+} from "@/components/ui/Table";
 import { useCategories } from "@/hooks/useCategories";
 import { useDeleteProduct, useProducts } from "@/hooks/useProducts";
 import { discountPercent, formatDate, formatPrice } from "@/lib/format";
 
 const STATUSES = ["DRAFT", "PUBLISHED", "ARCHIVED"];
 
-/**
- * The catalogue list.
- *
- * `GET /products` has no query support, so search and both filters run over
- * the array in `useProducts` rather than as request parameters. Fine at this
- * size; the moment the API grows `?search=` the hook is the only thing that
- * changes.
- */
+
 export default function ProductsPage() {
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("");
@@ -50,13 +51,10 @@ export default function ProductsPage() {
   const categories = useCategories();
   const remove = useDeleteProduct();
 
-  // `pendingDelete?._id` rather than `pendingDelete._id`: the React Compiler
-  // lifts the property path into the memo dependency check for this callback,
-  // which runs on every render — and `pendingDelete` is null until a row's
-  // trash button is pressed.
+
   const confirmDelete = async () => {
     const result = await remove.mutate(pendingDelete?._id);
-    if (result === null) return; // the modal keeps the error on screen
+    if (result === null) return; 
 
     setPendingDelete(null);
     refetch();
@@ -65,7 +63,7 @@ export default function ProductsPage() {
   return (
     <div className="flex flex-col gap-7">
       <PageHeader
-        eyebrow="Catalogue"
+        // eyebrow="Catalogue"
         title="Products"
         copy="Everything the storefront can show. Prices are stored in whole rupees."
         action={
@@ -81,9 +79,8 @@ export default function ProductsPage() {
       />
 
       <Card padded={false}>
-        <div className="flex flex-col gap-3 border-b border-line p-4 md:flex-row md:items-end">
-          <div className="relative flex-1">
-            {/* Sits over the input, which starts below the 23px label row. */}
+        <div className="grid gap-3 border-b border-line p-4 sm:grid-cols-2 md:flex md:flex-row md:items-end">
+          <div className="relative sm:col-span-2 md:flex-1">
             <SearchIcon
               className="pointer-events-none absolute left-3 top-[2.85rem] size-4 -translate-y-1/2 text-faint"
               aria-hidden="true"
@@ -127,7 +124,7 @@ export default function ProductsPage() {
           </Select>
         </div>
 
-        <div className="p-5">
+        <div className="p-4 sm:p-5">
           <DataState
             loading={loading}
             error={error}
@@ -158,7 +155,103 @@ export default function ProductsPage() {
             rows={6}
           >
             <>
-              <Table>
+              <TableOrCards
+                minWidth="52rem"
+                cards={
+                  <Records>
+                    {filtered.map((product) => {
+                      const off = discountPercent(
+                        product.price,
+                        product.discountPrice,
+                      );
+
+                      return (
+                        <Record
+                          key={product._id}
+                          media={<Thumb src={product.images?.[0]} />}
+                          title={product.name}
+                          subtitle={`${product.sku}${
+                            product.brand ? ` · ${product.brand}` : ""
+                          }`}
+                          badges={
+                            <>
+                              <Badge tone={PRODUCT_STATUS_TONE[product.status]}>
+                                {product.status}
+                              </Badge>
+                              {product.isFeatured ? (
+                                <Badge tone="accent">Featured</Badge>
+                              ) : null}
+                            </>
+                          }
+                          actions={
+                            <>
+                              <Button
+                                tone="outline"
+                                size="sm"
+                                icon={EyeIcon}
+                                aria-label={`View ${product.name}`}
+                                onClick={() => setViewing(product)}
+                              >
+                                View
+                              </Button>
+                              <Button
+                                tone="outline"
+                                size="sm"
+                                icon={EditIcon}
+                                aria-label={`Edit ${product.name}`}
+                                onClick={() => setEditing(product)}
+                              >
+                                Edit
+                              </Button>
+                              <Button
+                                tone="ghost"
+                                size="sm"
+                                icon={TrashIcon}
+                                aria-label={`Delete ${product.name}`}
+                                onClick={() => {
+                                  remove.reset();
+                                  setPendingDelete(product);
+                                }}
+                              >
+                                Delete
+                              </Button>
+                            </>
+                          }
+                        >
+                          <RecordField label="Price">
+                            <span className="tnum font-medium">
+                              {formatPrice(
+                                product.discountPrice ?? product.price,
+                              )}
+                            </span>
+                            {off ? (
+                              <span className="tnum ml-1.5 text-[12px] text-mist line-through">
+                                {formatPrice(product.price)}
+                              </span>
+                            ) : null}
+                          </RecordField>
+
+                          <RecordField label="Stock">
+                            <Badge tone={stockTone(product.stock)}>
+                              {product.stock ?? 0}
+                            </Badge>
+                          </RecordField>
+
+                          <RecordField label="Category">
+                            {product.category?.name ?? "—"}
+                          </RecordField>
+
+                          <RecordField label="Added">
+                            <span className="tnum">
+                              {formatDate(product.createdAt)}
+                            </span>
+                          </RecordField>
+                        </Record>
+                      );
+                    })}
+                  </Records>
+                }
+              >
                 <thead>
                   <tr>
                     <Th>Product</Th>
@@ -268,7 +361,7 @@ export default function ProductsPage() {
                     );
                   })}
                 </tbody>
-              </Table>
+              </TableOrCards>
 
               <p className="pt-4 text-[12.5px] text-mist">
                 Showing {filtered.length} of {products.length} products.
@@ -289,7 +382,6 @@ export default function ProductsPage() {
         />
       ) : null}
 
-      {/* Mounted only while open, so each visit starts from clean state. */}
       {editing !== undefined ? (
         <ProductForm
           product={editing}
@@ -337,11 +429,7 @@ export default function ProductsPage() {
   );
 }
 
-/**
- * `images[0]` is the cover. It is either a data URI written by the gallery or
- * an arbitrary remote URL, so `next/image` cannot be used — neither can be
- * declared in `images.remotePatterns`.
- */
+
 function Thumb({ src }) {
   const [broken, setBroken] = useState(false);
 
@@ -357,7 +445,6 @@ function Thumb({ src }) {
   }
 
   return (
-    // eslint-disable-next-line @next/next/no-img-element
     <img
       src={src}
       alt=""

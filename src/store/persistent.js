@@ -2,15 +2,7 @@
 
 import { useSyncExternalStore } from "react";
 
-/**
- * A localStorage-backed external store.
- *
- * `getServerSnapshot` returns the empty initial value, which is what the
- * prerendered HTML contains; React swaps to `getSnapshot` after hydration, so
- * there is no markup mismatch and no setState-inside-an-effect. Writes from
- * another tab arrive through the `storage` event — signing out in one tab
- * signs out of the panel everywhere.
- */
+
 export function createPersistentStore(key, initial) {
   let snapshot = initial;
   let rawCache = null;
@@ -59,7 +51,6 @@ export function createPersistentStore(key, initial) {
         window.localStorage.setItem(key, rawCache);
       }
     } catch {
-      // quota exceeded or private mode — state still lives in memory
     }
     emit();
   };
@@ -96,7 +87,6 @@ export function usePersistentStore(store) {
 
 const noopSubscribe = () => () => {};
 
-/** False during SSR and hydration, true once the client has taken over. */
 export function useHydrated() {
   return useSyncExternalStore(
     noopSubscribe,

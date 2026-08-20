@@ -12,7 +12,15 @@ import {
   SearchIcon,
 } from "@/components/ui/Icons";
 import PageHeader from "@/components/ui/PageHeader";
-import { Table, Td, Th, Tr } from "@/components/ui/Table";
+import {
+  Record,
+  RecordField,
+  Records,
+  TableOrCards,
+  Td,
+  Th,
+  Tr,
+} from "@/components/ui/Table";
 import { useReport, useReportDownload } from "@/hooks/useReports";
 import {
   ORDER_STATUS_TONE,
@@ -32,18 +40,7 @@ const ORDER_STATUSES = [
 const PAYMENT_STATUSES = ["PENDING", "PAID", "FAILED", "REFUNDED"];
 const METHODS = ["COD", "ONLINE"];
 
-/**
- * The order register, read from `GET /api/reports/orders`.
- *
- * Every `/api/orders` route filters by `req.user`, so there is still nothing
- * store-wide to read there — but the reports router answers exactly that:
- * admin-only, one row per order with the customer and shipping address
- * resolved, filtered by date, status, payment and free text, and paged.
- *
- * Read-only: moving an order through its statuses needs
- * `PATCH /api/orders/:id/status`, which does not exist on any router, so there
- * is nothing to wire an action to yet.
- */
+
 export default function OrdersPage() {
   const [filters, setFilters] = useState(() => ({
     ...defaultRange(),
@@ -78,7 +75,7 @@ export default function OrdersPage() {
   return (
     <div className="flex flex-col gap-7">
       <PageHeader
-        eyebrow="Commerce"
+        // eyebrow="Commerce"
         title="Orders"
         copy="Every order placed on the storefront, newest first."
         action={
@@ -98,7 +95,7 @@ export default function OrdersPage() {
         }
       />
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
         <Figure label="Orders" value={formatNumber(totals.matchedOrders)} />
         <Figure label="Revenue" value={formatPrice(totals.grossRevenue)} />
         <Figure label="Shipping" value={formatPrice(totals.shipping)} />
@@ -106,8 +103,8 @@ export default function OrdersPage() {
       </div>
 
       <Card padded={false}>
-        <div className="flex flex-col gap-3 border-b border-line p-4 md:flex-row md:flex-wrap md:items-end">
-          <div className="relative flex-1 md:min-w-56">
+        <div className="grid gap-3 border-b border-line p-4 sm:grid-cols-2 md:flex md:flex-row md:flex-wrap md:items-end">
+          <div className="relative sm:col-span-2 md:min-w-56 md:flex-1">
             <SearchIcon
               className="pointer-events-none absolute left-3 top-[2.85rem] size-4 -translate-y-1/2 text-faint"
               aria-hidden="true"
@@ -180,7 +177,7 @@ export default function OrdersPage() {
           </Select>
         </div>
 
-        <div className="flex flex-col gap-5 p-5">
+        <div className="flex flex-col gap-5 p-4 sm:p-5">
           <FormError error={download.error} />
 
           <DataState
@@ -199,7 +196,77 @@ export default function OrdersPage() {
             rows={6}
           >
             <>
-              <Table>
+              <TableOrCards
+                minWidth="56rem"
+                cards={
+                  <Records>
+                    {rows.map((order) => (
+                      <Record
+                        key={order.orderNumber}
+                        title={
+                          <span className="font-mono text-[13px]">
+                            {order.orderNumber}
+                          </span>
+                        }
+                        subtitle={
+                          [order.customer, order.email]
+                            .filter(Boolean)
+                            .join(" · ") || undefined
+                        }
+                        badges={
+                          <>
+                            <Badge
+                              tone={ORDER_STATUS_TONE[order.orderStatus]}
+                              dot
+                            >
+                              {order.orderStatus}
+                            </Badge>
+                            <Badge
+                              tone={PAYMENT_STATUS_TONE[order.paymentStatus]}
+                            >
+                              {order.paymentStatus}
+                            </Badge>
+                          </>
+                        }
+                      >
+                        <RecordField label="Total">
+                          <span className="tnum font-medium">
+                            {formatPrice(order.totalAmount)}
+                          </span>
+                        </RecordField>
+
+                        <RecordField label="Units">
+                          <span className="tnum">
+                            {formatNumber(order.units)}
+                          </span>
+                        </RecordField>
+
+                        <RecordField label="Placed">
+                          <span className="tnum">
+                            {formatDate(order.placedAt)}
+                          </span>
+                        </RecordField>
+
+                        <RecordField label="Method">
+                          {order.paymentMethod}
+                        </RecordField>
+
+                        <RecordField label="Ships to" wide>
+                          {[order.city, order.state]
+                            .filter(Boolean)
+                            .join(", ") || "—"}
+                        </RecordField>
+
+                        {order.cancellationReason ? (
+                          <RecordField label="Cancelled" wide>
+                            {order.cancellationReason}
+                          </RecordField>
+                        ) : null}
+                      </Record>
+                    ))}
+                  </Records>
+                }
+              >
                 <thead>
                   <tr>
                     <Th>Order</Th>
@@ -263,7 +330,7 @@ export default function OrdersPage() {
                     </Tr>
                   ))}
                 </tbody>
-              </Table>
+              </TableOrCards>
 
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <p className="text-[12.5px] text-mist">
@@ -315,11 +382,11 @@ export default function OrdersPage() {
 
 function Figure({ label, value }) {
   return (
-    <div className="flex flex-col gap-1 rounded-xl border border-line bg-paper px-5 py-4">
-      <span className="text-[11.5px] font-medium uppercase tracking-[0.14em] text-mist">
+    <div className="flex flex-col gap-1 rounded-xl border border-line bg-paper px-4 py-3.5 sm:px-5 sm:py-4">
+      <span className="truncate text-[11px] font-medium uppercase tracking-[0.14em] text-mist sm:text-[11.5px]">
         {label}
       </span>
-      <span className="tnum text-[1.5rem] font-semibold leading-none text-ink">
+      <span className="tnum text-[clamp(1.15rem,4.6vw,1.5rem)] font-semibold leading-none text-ink">
         {value}
       </span>
     </div>

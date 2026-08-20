@@ -1,22 +1,7 @@
-import { Geist_Mono, Plus_Jakarta_Sans } from "next/font/google";
+import { Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/store/AuthProvider";
 
-/**
- * Plus Jakarta Sans carries the whole panel: it is a variable face, so the
- * one request covers every weight the UI asks for (400 body, 500/600 labels
- * and headings) without loading a file per weight.
- *
- * Mono stays Geist Mono — it is only ever used for SKUs and order numbers,
- * where an unmistakably monospaced face matters more than matching the
- * heading font.
- */
-const jakartaSans = Plus_Jakarta_Sans({
-  variable: "--font-jakarta-sans",
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-  display: "swap",
-});
 
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
@@ -38,6 +23,10 @@ export const metadata = {
 export const viewport = {
   themeColor: "#12141a",
   colorScheme: "light",
+
+  viewportFit: "cover",
+
+  interactiveWidget: "resizes-content",
 };
 
 export default function RootLayout({ children }) {
@@ -45,16 +34,17 @@ export default function RootLayout({ children }) {
     <html
       lang="en"
       data-scroll-behavior="smooth"
-      className={`${jakartaSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${geistMono.variable} h-full antialiased`}
     >
-      {/* Extensions — Grammarly, password managers — write their own
-          attributes onto <body> before React hydrates, which React reports as
-          a mismatch it "won't patch up". The suppression is scoped to this one
-          element's own attributes, so a genuine mismatch anywhere inside the
-          tree is still reported. */}
+     
+      <link rel="preconnect" href="https://fonts.googleapis.com" />
+      <link
+        rel="preconnect"
+        href="https://fonts.gstatic.com"
+        crossOrigin="anonymous"
+      />
+
       <body className="min-h-full" suppressHydrationWarning>
-        {/* The session lives above the router so /login and the shell read the
-            same store — signing in navigates without a reload. */}
         <AuthProvider>{children}</AuthProvider>
       </body>
     </html>

@@ -1,10 +1,7 @@
 import Link from "next/link";
 import { SpinnerIcon } from "@/components/ui/Icons";
 
-/**
- * One button, three tones and two sizes. Renders an `<a>` when given `href`
- * so a navigation and an action can look identical without a wrapper.
- */
+
 const TONES = {
   primary:
     "bg-ink text-paper hover:bg-shell-2 disabled:bg-ink/40 disabled:text-paper/70",
@@ -39,6 +36,8 @@ export default function Button({
   const classes = [
     "inline-flex shrink-0 items-center justify-center rounded-lg font-medium",
     "transition-colors duration-150 disabled:cursor-not-allowed",
+   
+    "touch-manipulation tap",
     TONES[tone],
     SIZES[size],
     className,
@@ -67,8 +66,7 @@ export default function Button({
   return (
     <button
       type={type}
-      // aria-busy tells a screen reader the press was registered; without it
-      // the swapped-in spinner is silent.
+  
       aria-busy={loading || undefined}
       disabled={disabled || loading}
       className={classes}

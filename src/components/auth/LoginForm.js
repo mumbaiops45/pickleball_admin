@@ -9,21 +9,9 @@ import { ShieldIcon } from "@/components/ui/Icons";
 import { useApiMutation } from "@/hooks/useApi";
 import { useAuth } from "@/store/AuthProvider";
 
-/**
- * The seeded administrator. Prefilled so the panel can be opened on a fresh
- * checkout without hunting for credentials — swap or drop this once real
- * accounts exist.
- */
+
 const DEMO = { identifier: "admin@gmail.com", password: "123456" };
 
-/**
- * Credentials form.
- *
- * The API accepts either an e-mail or a phone number, so the field asks for
- * one "identifier" and `auth.service` picks the key. `useApiMutation` catches
- * the failure, which is why there is no try/catch here — including the
- * "not an administrator" rejection <AuthProvider> raises for CUSTOMER logins.
- */
 export default function LoginForm() {
   const { signIn } = useAuth();
   const router = useRouter();
@@ -99,7 +87,7 @@ function DemoHint({ onUse }) {
         <span className="text-[10.5px] font-medium uppercase tracking-[0.18em] text-faint">
           Demo account
         </span>
-        <span className="font-mono text-[11.5px] leading-none text-mist">
+        <span className="break-anywhere font-mono text-[11.5px] leading-tight text-mist">
           {DEMO.identifier} · {DEMO.password}
         </span>
       </div>
@@ -107,7 +95,7 @@ function DemoHint({ onUse }) {
       <button
         type="button"
         onClick={onUse}
-        className="rounded-md border border-line-strong px-2.5 py-1 text-[11.5px] font-medium text-ink transition-colors hover:bg-surface-2"
+        className="tap shrink-0 rounded-md border border-line-strong px-2.5 py-1 text-[11.5px] font-medium text-ink transition-colors hover:bg-surface-2"
       >
         Use
       </button>

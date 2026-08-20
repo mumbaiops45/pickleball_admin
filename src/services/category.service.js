@@ -1,12 +1,6 @@
 import { api, unwrap } from "@/lib/api";
 
-/**
- * /api/categories — full CRUD.
- *
- * Note these routes carry no auth middleware on the server, so they answer to
- * anyone. The panel still sends the bearer token (harmless) and the API-REVIEW
- * notes track the fix.
- */
+
 
 export async function listCategories(options) {
   return unwrap(await api.get("/categories", options), []);

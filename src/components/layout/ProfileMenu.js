@@ -14,21 +14,13 @@ import {
 import { useClickOutside } from "@/hooks/useClickOutside";
 import { useAuth } from "@/store/AuthProvider";
 
-/**
- * The avatar dropdown in the topbar.
- *
- * Built on a plain button + absolutely positioned panel rather than a
- * headless-UI dependency: outside-click, Escape and `aria-expanded` are all it
- * needs, which is `useClickOutside` plus a ref. Focus stays on the trigger the
- * whole time it is open, so dismissing puts the user back where they were.
- */
+
 export default function ProfileMenu() {
   const { user, signOut } = useAuth();
   const wrapperRef = useRef(null);
   const pathname = usePathname();
 
-  // Storing *where* it was opened rather than a boolean means a navigation
-  // closes it on its own — no effect watching the pathname.
+ 
   const [openedAt, setOpenedAt] = useState(null);
   const open = openedAt === pathname;
 
@@ -46,7 +38,7 @@ export default function ProfileMenu() {
         onClick={() => setOpenedAt(open ? null : pathname)}
         aria-expanded={open}
         aria-haspopup="menu"
-        className={`flex items-center gap-2.5 rounded-full border py-1 pl-1 pr-2.5 transition-colors ${
+        className={`tap flex items-center gap-2.5 rounded-full border py-1 pl-1 pr-2.5 transition-colors ${
           open
             ? "border-line-strong bg-surface"
             : "border-line hover:border-line-strong hover:bg-surface"
@@ -73,14 +65,16 @@ export default function ProfileMenu() {
         <div
           role="menu"
           aria-label="Account"
-          className="absolute right-0 top-[calc(100%+0.5rem)] z-50 w-70 origin-top-right overflow-hidden rounded-xl border border-line bg-paper shadow-[0_24px_60px_-18px_rgba(15,17,21,0.28)]"
+          className="absolute right-0 top-[calc(100%+0.5rem)] z-50 w-70 max-w-[calc(100vw-2rem)] origin-top-right overflow-hidden rounded-xl border border-line bg-paper shadow-[0_24px_60px_-18px_rgba(15,17,21,0.28)]"
         >
           <div className="flex items-start gap-3 border-b border-line bg-surface px-4 py-4">
             <Avatar user={user} size="lg" />
             <div className="flex min-w-0 flex-col gap-1">
               <p className="truncate text-sm font-semibold text-ink">{label}</p>
               {user.email ? (
-                <p className="truncate text-[12.5px] text-mist">{user.email}</p>
+                <p className="break-anywhere text-[12.5px] text-mist">
+                  {user.email}
+                </p>
               ) : null}
               {user.phone ? (
                 <p className="truncate text-[12.5px] text-mist">{user.phone}</p>
@@ -106,7 +100,7 @@ export default function ProfileMenu() {
                 close();
                 signOut();
               }}
-              className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2.5 text-left text-[13.5px] font-medium text-bad transition-colors hover:bg-bad-tint"
+              className="tap flex w-full items-center gap-2.5 rounded-lg px-3 py-2.5 text-left text-[13.5px] font-medium text-bad transition-colors hover:bg-bad-tint"
             >
               <LogOutIcon className="size-4" aria-hidden="true" />
               Sign out
@@ -120,7 +114,7 @@ export default function ProfileMenu() {
 
 function MenuLink({ href, icon: Icon, onSelect, children }) {
   const className =
-    "flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-[13.5px] text-ink transition-colors hover:bg-surface";
+    "tap flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-[13.5px] text-ink transition-colors hover:bg-surface";
 
   return (
     <Link href={href} role="menuitem" onClick={onSelect} className={className}>

@@ -14,8 +14,7 @@ const STATUSES = ["DRAFT", "PUBLISHED", "ARCHIVED"];
 const SKILLS = ["Beginner", "Intermediate", "Advanced", "All levels"];
 const TYPES = ["Men's", "Kid's"];
 
-// The five option labels the storefront already uses. Free text, because a
-// new category will want its own.
+
 const OPTION_LABELS = [
   "Grip size",
   "US size",
@@ -51,19 +50,7 @@ const EMPTY = {
   specs: [],
 };
 
-/**
- * Create/edit, against POST and PUT /api/products.
- *
- * Every field on the Product model is here — the API drops unknown keys
- * silently and has no validation layer (API-REVIEW.md §3.4), so anything the
- * form omits is a field nobody can ever set. The numeric fields stay strings
- * in state and are coerced by `normalise` in the service, which is also where
- * the empty-string-to-null rules live.
- *
- * `slug` and `sku` are unique on the server. Slug is derived from the name
- * while untouched, then left alone the moment it is edited — renaming a live
- * product should not silently change the URL the storefront already links to.
- */
+
 export default function ProductForm({ product, onClose, onSaved }) {
   const [form, setForm] = useState(() =>
     product
@@ -96,7 +83,6 @@ export default function ProductForm({ product, onClose, onSaved }) {
       : EMPTY,
   );
 
-  // Editing an existing product means its slug is already published.
   const [slugTouched, setSlugTouched] = useState(Boolean(product));
 
   const { categories, loading: loadingCategories } = useCategories();
@@ -122,8 +108,7 @@ export default function ProductForm({ product, onClose, onSaved }) {
   const toggle = (key) => (event) =>
     setForm((current) => ({ ...current, [key]: event.target.checked }));
 
-  // Repeatable rows (options, highlights, colorways, specs) all mutate the
-  // same way: replace the whole array with the edited copy.
+
   const setList = (key) => (rows) =>
     setForm((current) => ({ ...current, [key]: rows }));
 
@@ -430,20 +415,24 @@ export default function ProductForm({ product, onClose, onSaved }) {
             empty="No colourways — the product page shows no swatches."
             render={(row, update) => (
               <>
-                <input
-                  type="color"
-                  aria-label="Swatch colour"
-                  value={/^#[0-9a-fA-F]{6}$/.test(row.hex) ? row.hex : "#d4ff3f"}
-                  onChange={(event) => update({ hex: event.target.value })}
-                  className="h-11 w-12 shrink-0 cursor-pointer rounded-lg border border-line-strong bg-paper p-1"
-                />
-                <input
-                  value={row.name}
-                  onChange={(event) => update({ name: event.target.value })}
-                  placeholder="Clay"
-                  aria-label="Colourway name"
-                  className={ROW_INPUT}
-                />
+                {/* Grouped, so a stacked row does not spend a whole line on a
+                    48px swatch with nothing beside it. */}
+                <div className="flex min-w-0 flex-1 gap-2">
+                  <input
+                    type="color"
+                    aria-label="Swatch colour"
+                    value={/^#[0-9a-fA-F]{6}$/.test(row.hex) ? row.hex : "#d4ff3f"}
+                    onChange={(event) => update({ hex: event.target.value })}
+                    className="h-11 w-12 shrink-0 cursor-pointer rounded-lg border border-line-strong bg-paper p-1"
+                  />
+                  <input
+                    value={row.name}
+                    onChange={(event) => update({ name: event.target.value })}
+                    placeholder="Clay"
+                    aria-label="Colourway name"
+                    className={ROW_INPUT}
+                  />
+                </div>
                 <input
                   value={row.hex}
                   onChange={(event) => update({ hex: event.target.value })}
@@ -539,13 +528,6 @@ const ROW_INPUT =
   "text-ink placeholder:text-faint transition-colors focus:border-volt-deep " +
   "focus:outline-none focus:ring-2 focus:ring-volt-deep/25";
 
-/**
- * A list of short strings — options and highlights.
- *
- * Typing commits on Enter or comma rather than on every keystroke, so the
- * array never fills with half-typed entries. Backspace on an empty box pulls
- * the last chip back for editing instead of silently deleting it.
- */
 function TagInput({ label, value, onChange, placeholder, hint }) {
   const [draft, setDraft] = useState("");
 
@@ -586,7 +568,7 @@ function TagInput({ label, value, onChange, placeholder, hint }) {
                 type="button"
                 onClick={() => onChange(value.filter((_, i) => i !== index))}
                 aria-label={`Remove ${entry}`}
-                className="grid size-5 place-items-center rounded-full text-mist transition-colors hover:bg-paper hover:text-bad"
+                className="grid size-6 place-items-center rounded-full text-mist transition-colors hover:bg-paper hover:text-bad sm:size-5"
               >
                 &times;
               </button>
@@ -609,11 +591,6 @@ function TagInput({ label, value, onChange, placeholder, hint }) {
   );
 }
 
-/**
- * Repeatable object rows — colourways and specs. The caller renders the
- * inputs for one row and receives a patch function; add, remove and reorder
- * live here so both lists behave identically.
- */
 function RowList({ label, value, onChange, blank, render, addLabel, empty }) {
   const patch = (index) => (changes) =>
     onChange(
@@ -638,7 +615,7 @@ function RowList({ label, value, onChange, blank, render, addLabel, empty }) {
             <li key={index} className="flex flex-col gap-2 sm:flex-row sm:items-center">
               {render(row, patch(index))}
 
-              <span className="flex shrink-0 gap-1">
+              <span className="flex shrink-0 gap-1 max-sm:justify-end">
                 <RowButton
                   onClick={() => move(index, -1)}
                   disabled={index === 0}
@@ -687,7 +664,7 @@ function RowButton({ onClick, disabled, label, danger, children }) {
       disabled={disabled}
       aria-label={label}
       title={label}
-      className={`grid size-9 place-items-center rounded-lg border border-line-strong bg-surface text-mist transition-colors disabled:opacity-40 ${
+      className={`tap grid size-9 place-items-center rounded-lg border border-line-strong bg-surface text-mist transition-colors disabled:opacity-40 ${
         danger ? "hover:border-bad hover:text-bad" : "hover:text-ink"
       }`}
     >

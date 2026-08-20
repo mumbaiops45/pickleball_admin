@@ -18,18 +18,7 @@ import {
   isDataUrl,
 } from "@/lib/image";
 
-/**
- * Picks an image and hands back the string the API stores.
- *
- * Two ways in, because both are legitimate: choose a file from disk (read and
- * downscaled to a `data:` URI by `lib/image`, since there is no upload route)
- * or paste a URL for something already hosted. The value is a plain string
- * either way, so the form above this does not care which was used.
- *
- * The `<input type="file">` stays in the DOM but hidden — a bare styled button
- * cannot open a file dialog, only a real input can, and clicking the label is
- * what keeps the control keyboard-reachable.
- */
+
 export default function ImagePicker({
   label = "Image",
   value = "",
@@ -70,8 +59,7 @@ export default function ImagePicker({
       );
     } finally {
       setBusy(false);
-      // Clearing lets the same file be re-picked after a Remove; without it
-      // the input's value is unchanged and no change event fires.
+
       if (inputRef.current) inputRef.current.value = "";
     }
   };
@@ -91,7 +79,7 @@ export default function ImagePicker({
 
   return (
     <div className="flex flex-col gap-2">
-      <div className="flex items-center justify-between gap-3">
+      <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
         <span className="text-[13px] font-medium text-ink">{label}</span>
 
         <div
@@ -249,14 +237,12 @@ function Preview({ value, meta, onReplace, onRemove, disabled }) {
   const inline = isDataUrl(value);
 
   return (
-    <div className="flex items-center gap-4 rounded-xl border border-line bg-surface p-3">
-      <div className="grid size-20 shrink-0 place-items-center overflow-hidden rounded-lg border border-line bg-paper">
+    <div className="flex items-start gap-3 rounded-xl border border-line bg-surface p-3 sm:items-center sm:gap-4">
+      <div className="grid size-16 shrink-0 place-items-center overflow-hidden rounded-lg border border-line bg-paper sm:size-20">
         {broken ? (
           <ImageIcon className="size-6 text-faint" aria-hidden="true" />
         ) : (
-          // Not next/image: the source is either a data URI or an arbitrary
-          // remote host, and neither can be in `images.remotePatterns`.
-          // eslint-disable-next-line @next/next/no-img-element
+
           <img
             src={value}
             alt=""
@@ -271,7 +257,7 @@ function Preview({ value, meta, onReplace, onRemove, disabled }) {
           {meta?.name ?? (inline ? "Embedded image" : "Linked image")}
         </p>
 
-        <p className="text-[12px] text-mist">
+        <p className="break-anywhere text-[12px] text-mist">
           {broken
             ? "This image did not load"
             : meta
@@ -283,7 +269,7 @@ function Preview({ value, meta, onReplace, onRemove, disabled }) {
                 : value}
         </p>
 
-        <div className="mt-1 flex gap-1.5">
+        <div className="mt-1 flex flex-wrap gap-1.5">
           <Button
             tone="outline"
             size="sm"

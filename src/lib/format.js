@@ -1,7 +1,4 @@
-/**
- * Display helpers. `en-IN` gives the lakh/crore grouping the storefront uses
- * (₹1,15,999 rather than ₹115,999), and the API stores prices in whole rupees.
- */
+
 
 export function formatPrice(value) {
   if (value === null || value === undefined || Number.isNaN(Number(value))) {
@@ -38,13 +35,11 @@ export function formatDateTime(value) {
   })}`;
 }
 
-/** "PUBLISHED" → "Published", for enum values shown as prose. */
 export function titleCase(value) {
   if (!value) return "";
   return value.charAt(0).toUpperCase() + value.slice(1).toLowerCase();
 }
 
-/** Initials for the avatar; falls back to the e-mail, then to a dash. */
 export function initials(user) {
   const source = user?.name?.trim() || user?.email?.split("@")[0] || "";
   if (!source) return "—";
@@ -61,10 +56,7 @@ export function discountPercent(price, discountPrice) {
   return Math.round(((price - discountPrice) / price) * 100);
 }
 
-/**
- * Axis ticks and tight cells, in the Indian system the prices are grouped by:
- * 1,25,000 reads as 1.25L, not 125K.
- */
+
 export function formatCompact(value) {
   const number = Number(value ?? 0);
   const abs = Math.abs(number);
@@ -76,7 +68,6 @@ export function formatCompact(value) {
   return String(Math.round(number));
 }
 
-/** One decimal, but only when it says something: 1.5k, not 2.0k. */
 const trim = (value) =>
   value.toFixed(1).replace(/\.0$/, "");
 
@@ -84,10 +75,7 @@ export function formatCompactPrice(value) {
   return `₹${formatCompact(value)}`;
 }
 
-/**
- * The period keys the dashboard and report endpoints group by:
- * `2026-08-18` (day), `2026-W33` (ISO week) and `2026-08` (month).
- */
+
 export function formatPeriod(period) {
   if (!period) return "—";
 
@@ -114,7 +102,6 @@ export function formatPeriod(period) {
   return period;
 }
 
-/** "+12.4%" / "-3%" — the sign is part of the number, not a colour. */
 export function formatPercent(value) {
   const number = Number(value ?? 0);
   if (!Number.isFinite(number)) return "—";

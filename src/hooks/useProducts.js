@@ -4,10 +4,7 @@ import { useCallback, useMemo } from "react";
 import { useApiMutation, useApiQuery } from "@/hooks/useApi";
 import * as productService from "@/services/product.service";
 
-/**
- * The API returns every product in one unfiltered, unpaginated array, so the
- * search and the category/status filters are applied here in the browser.
- */
+
 export function useProducts({ search = "", category = "", status = "" } = {}) {
   const query = useApiQuery(
     useCallback((signal) => productService.listProducts({ signal }), []),

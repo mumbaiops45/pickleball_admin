@@ -1,13 +1,6 @@
 import { api, unwrap } from "@/lib/api";
 
-/**
- * /api/products — full CRUD, unauthenticated on the server side (see
- * API-REVIEW.md).
- *
- * `GET /products` returns every product, newest first, with `category`
- * populated down to `{ _id, name }`. There is no pagination, search or filter
- * on the API, so the list screen does that work in the browser.
- */
+
 
 export async function listProducts(options) {
   return unwrap(await api.get("/products", options), []);
@@ -17,10 +10,6 @@ export async function getProduct(id, options) {
   return unwrap(await api.get(`/products/${id}`, options));
 }
 
-/**
- * `slug` and `sku` are required and unique; the API rejects duplicates. The
- * form derives both from the name unless they are typed in.
- */
 export async function createProduct(payload) {
   return unwrap(await api.post("/products", normalise(payload)));
 }
@@ -41,11 +30,7 @@ export function slugify(value) {
     .replace(/^-+|-+$/g, "");
 }
 
-/**
- * Mongoose rejects "" where it wants a number. `discountPrice` is nullable in
- * the schema; `price` and `stock` are not, so an empty stock means zero rather
- * than an unexplained 500 from the server.
- */
+
 function normalise(payload) {
   const out = { ...payload };
   const blank = (value) => value === "" || value === null;
@@ -54,18 +39,15 @@ function normalise(payload) {
     out.discountPrice = blank(out.discountPrice) ? null : Number(out.discountPrice);
   }
 
-  // Nullable strings: "" would be stored as an empty string otherwise.
   for (const key of ["badge", "skill", "type", "optionLabel"]) {
     if (key in out && blank(out[key])) out[key] = null;
   }
 
-  // Both default to 0 in the schema, so a blank means zero, not null.
   for (const key of ["rating", "reviewCount"]) {
     if (key in out) out[key] = blank(out[key]) ? 0 : Number(out[key]);
   }
 
-  // A half-filled repeatable row fails schema validation with a 400, so drop
-  // the rows the user added and never completed.
+
   if (Array.isArray(out.colorways)) {
     out.colorways = out.colorways
       .map((row) => ({ name: row.name?.trim(), hex: row.hex?.trim() }))

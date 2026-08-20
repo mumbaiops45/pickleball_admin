@@ -20,18 +20,7 @@ import { useHydrated, usePersistentStore } from "@/store/persistent";
 
 const AuthContext = createContext(null);
 
-/**
- * The admin session.
- *
- * `POST /api/auth/login` signs a token for *any* account, CUSTOMER included,
- * so the role check lives here: a non-ADMIN login is rejected and nothing is
- * stored. That is a UI gate, not a security boundary — the API still has to
- * enforce the role on its own write routes (see API-REVIEW.md).
- *
- * `hydrated` matters: the token lives in localStorage, so during SSR and the
- * first client render the panel does not yet know whether anyone is signed in.
- * Guards must wait for it instead of bouncing everyone to /login.
- */
+
 export function AuthProvider({ children }) {
   const session = usePersistentStore(sessionStore);
   const hydrated = useHydrated();
@@ -45,8 +34,7 @@ export function AuthProvider({ children }) {
     [router],
   );
 
-  // Any 401 from any screen means the 24h token is spent — drop the session
-  // once, centrally, rather than at each call site.
+
   useEffect(
     () =>
       setUnauthorizedHandler(() => {
